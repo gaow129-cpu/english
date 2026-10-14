@@ -1,0 +1,1023 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>字卡星球</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: phone-first app shell — sticky top bar, single column of panels, fixed bottom tab bar */
+:root{
+  --bg:#eef3f6; --surface:#ffffff; --ink:#1d2b36; --muted:#617383; --line:#d8e2e9;
+  --accent:#2f6fd8; --accent-soft:#e3edfc; --sun:#f2a33a; --sun-soft:#fdf0dc;
+  --good:#2e9a62; --good-soft:#e1f4ea; --bad:#d6504a; --bad-soft:#fbe5e3;
+  --plum:#7d5bd6; --plum-soft:#eee8fb;
+  --drive-bg:#15222d; --drive-fg:#f2f6f9;
+  --display:"Fredoka","Noto Sans TC",system-ui,sans-serif;
+  --body:"Noto Sans TC",system-ui,-apple-system,"PingFang TC",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111a22; --surface:#1a2631; --ink:#e7eef4; --muted:#93a5b4; --line:#2a3946;
+  --accent:#6aa2ff; --accent-soft:#1f3150; --sun:#f5b65d; --sun-soft:#3a2d1a;
+  --good:#5cc78f; --good-soft:#18352a; --bad:#ef7a73; --bad-soft:#3d2120;
+  --plum:#a88cf0; --plum-soft:#2c2545; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111a22; --surface:#1a2631; --ink:#e7eef4; --muted:#93a5b4; --line:#2a3946;
+  --accent:#6aa2ff; --accent-soft:#1f3150; --sun:#f5b65d; --sun-soft:#3a2d1a;
+  --good:#5cc78f; --good-soft:#18352a; --bad:#ef7a73; --bad-soft:#3d2120;
+  --plum:#a88cf0; --plum-soft:#2c2545; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;font-size:20px}
+.brand svg{width:30px;height:30px}
+.streak{display:flex;align-items:center;gap:6px;background:var(--sun-soft);color:var(--sun);font-family:var(--display);font-weight:700;padding:4px 12px;border-radius:999px;font-size:17px}
+main{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:16px 110px;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{margin:0;text-wrap:balance}
+h2{font-size:18px;font-weight:900}
+.muted{color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--bg);border-radius:12px;padding:10px 6px;text-align:center}
+.stat b{display:block;font-family:var(--display);font-size:26px;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:12px;color:var(--muted)}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:14px;text-align:center}
+.day i{display:grid;place-items:center;width:34px;height:34px;margin:0 auto 4px;border-radius:50%;background:var(--bg);font-style:normal;font-size:16px}
+.day.on i{background:var(--sun);color:#fff}
+.day span{font-size:11px;color:var(--muted)}
+.day.today span{color:var(--ink);font-weight:700}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qbtn{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-bottom-width:4px;border-radius:14px;padding:12px;font-weight:700;text-align:left;transition:transform .1s}
+.qbtn:active{transform:translateY(2px);border-bottom-width:2px}
+.qbtn .ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex:none}
+.qbtn svg{width:20px;height:20px}
+.c-blue{background:var(--accent-soft);color:var(--accent)} .c-sun{background:var(--sun-soft);color:var(--sun)}
+.c-good{background:var(--good-soft);color:var(--good)} .c-plum{background:var(--plum-soft);color:var(--plum)}
+.sets{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.set{display:flex;flex-direction:column;gap:10px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+.set h3{font-size:17px}
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;background:var(--bg);color:var(--muted)}
+.bar{height:8px;border-radius:99px;background:var(--bg);overflow:hidden}
+.bar>div{height:100%;background:var(--good);border-radius:99px;transition:width .4s}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.back{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--muted);padding:4px 0}
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.wide{grid-column:1/-1}
+.tgl{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line);font-weight:700;cursor:pointer}
+.tgl input{width:24px;height:24px;padding:0;flex:none;accent-color:var(--accent)}
+.note{background:var(--sun-soft);color:var(--ink);border-radius:14px;padding:12px 14px;font-size:14px;margin:0}
+.drive{background:var(--drive-bg);color:var(--drive-fg);border-radius:24px;padding:20px 16px 24px;display:flex;flex-direction:column;gap:14px;text-align:center;min-height:62vh;justify-content:space-between}
+.dtop{display:flex;justify-content:space-between;gap:10px;font-size:14px;opacity:.75;font-variant-numeric:tabular-nums;text-align:left}
+.dword{font-family:var(--display);font-weight:700;font-size:clamp(40px,12vw,64px);line-height:1.1;word-break:break-word}
+.dzh{font-size:26px;font-weight:700;opacity:.9}
+.dex{font-size:15px;opacity:.65;max-width:34ch;margin:0 auto;min-height:1.5em}
+.dstep{font-size:13px;letter-spacing:.06em;opacity:.6;min-height:1.4em}
+.dctl{display:flex;justify-content:center;align-items:center;gap:22px}
+.dctl button{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.12);color:var(--drive-fg)}
+.dctl .dplay{width:104px;height:104px;background:var(--sun);color:#1d2b36}
+.dctl svg{width:34px;height:34px}.dctl .dplay svg{width:48px;height:48px}
+.dstop{color:var(--drive-fg);opacity:.75;font-weight:700;padding:8px}
+.mode{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:14px;font-weight:700;font-size:14px}
+.mode svg{width:22px;height:22px}
+.wlist{display:flex;flex-direction:column}
+.witem{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.witem:first-child{border-top:0}
+.witem .en{font-family:var(--display);font-weight:600;font-size:17px}
+.witem .zh{font-size:13px;color:var(--muted);min-width:0}
+.lv{display:flex;gap:3px}.lv i{width:7px;height:7px;border-radius:50%;background:var(--line)}.lv i.f{background:var(--good)}
+.say{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.say svg{width:18px;height:18px}
+.card-stage{perspective:1000px}
+.flash{position:relative;height:300px;transform-style:preserve-3d;transition:transform .45s}
+.flash.flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:22px;background:var(--surface);border:1px solid var(--line);border-bottom-width:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;text-align:center}
+.face.b{transform:rotateY(180deg)}
+.big{font-family:var(--display);font-weight:700;font-size:40px;line-height:1.1;word-break:break-word}
+.pos{font-size:13px;color:var(--plum);font-weight:700}
+.ex{font-size:14px;color:var(--muted);max-width:32ch}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{padding:13px;border-radius:14px;font-weight:900;font-size:16px;border-bottom:4px solid rgba(0,0,0,.18)}
+.btn:active{transform:translateY(2px);border-bottom-width:2px}
+.btn.pri{background:var(--accent);color:#fff}.btn.ok{background:var(--good);color:#fff}.btn.no{background:var(--bad);color:#fff}
+.btn.ghost{background:var(--surface);border:1px solid var(--line);border-bottom-width:4px}
+.prog{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.prog .bar{flex:1}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{text-align:left;padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);border-bottom-width:4px;font-weight:700}
+.opt.right{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:700;font-size:13px}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%}
+.spell{font-family:var(--display);font-size:22px;text-align:center;letter-spacing:.04em}
+.fb{text-align:center;font-weight:700;min-height:1.5em}
+.fb.good{color:var(--good)}.fb.bad{color:var(--bad)}
+.done{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.done .big{font-size:52px;color:var(--good)}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;z-index:20}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:700;color:var(--muted);padding:4px 0}
+.tab svg{width:22px;height:22px}
+.tab.on{color:var(--accent)}
+.lvwrap{display:flex;flex-direction:column;gap:8px}
+.lvbar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (min-width:620px){.lvbar{grid-template-columns:repeat(6,1fr)}}
+.lvb{display:flex;flex-direction:column;align-items:center;gap:0;padding:8px 4px;border-radius:14px;background:var(--surface);border:1px solid var(--line);border-bottom-width:3px;min-width:0}
+.lvb b{font-family:var(--display);font-size:22px;font-weight:700;line-height:1.2}
+.lvb span{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.lvb.on{background:var(--accent);border-color:var(--accent);color:#fff}.lvb.on span{color:#fff;opacity:.9}
+.lvfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.newc{background:var(--accent-soft);color:var(--accent)}
+.daily{display:flex;flex-direction:column;gap:12px}
+.ngl{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);font-weight:700}
+.ngl select{width:auto;padding:4px 8px;border-radius:8px}
+.tasks{display:flex;flex-direction:column}
+.task{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-weight:700}
+.task:first-child{border-top:0}
+.task i{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-style:normal;font-size:13px;color:#fff}
+.task.ok i{background:var(--good);border-color:var(--good)}
+.task .muted{font-size:13px;font-weight:500;font-variant-numeric:tabular-nums}
+.donemsg{margin:0;padding:12px;border-radius:12px;background:var(--good-soft);color:var(--good);font-weight:700;text-align:center}
+.ptip{display:flex;align-items:center;gap:10px;text-align:left;padding:12px;border-radius:12px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:14px}
+.ptip svg{width:22px;height:22px;flex:none}.ptip span{flex:1}
+.glist{display:flex;flex-direction:column;gap:10px}
+.gcard{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+.gcard h3{font-size:16px}.gcard p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.gnum{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--plum-soft);color:var(--plum);font-family:var(--display);font-weight:700}
+.gnum svg{width:18px;height:18px}
+.gnum.ok{background:var(--good);color:#fff}
+.lesson{display:flex;flex-direction:column;gap:10px}
+.lesson h3{font-size:15px;margin-top:6px;color:var(--plum)}
+.lesson ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.ftable{display:flex;flex-direction:column;gap:6px}
+.frow{display:grid;grid-template-columns:5.5em 1fr;gap:10px;align-items:baseline;background:var(--bg);border-radius:10px;padding:8px 10px}
+.frow span{font-size:13px;font-weight:700;color:var(--muted)}
+.frow code{font-family:var(--display);font-size:15px;white-space:normal;min-width:0}
+.ex2{grid-template-columns:auto 1fr}
+.exen{font-family:var(--display);font-weight:600;font-size:16px}
+.qtext{font-size:20px;font-weight:700;line-height:1.5}
+.blank{color:var(--accent);letter-spacing:-.1em}
+.why{padding:12px 14px;border-radius:12px;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.why.good{background:var(--good-soft)}.why.bad{background:var(--bad-soft)}
+.why b{color:var(--ink)}
+.opt.unsure{color:var(--muted);font-weight:500;border-style:dashed}
+.pres{display:flex;flex-direction:column;gap:8px}
+.prow{display:grid;grid-template-columns:2.4em 1fr 2.5em;gap:10px;align-items:center;font-variant-numeric:tabular-nums}
+.prow b{font-family:var(--display)}.prow.rec b{color:var(--accent)}
+.pbtns{display:grid;grid-template-columns:1fr 1fr auto;gap:8px}
+.pbtns .btn{padding:11px 10px;font-size:15px}
+.inl{display:flex;align-items:center;gap:6px;font-weight:700;cursor:pointer}
+.inl input{width:20px;height:20px;padding:0;accent-color:var(--accent)}
+.phint{min-height:1.4em;font-weight:700;color:var(--good);text-align:center}
+.chat{display:flex;flex-direction:column;gap:10px}
+.bub{display:flex;flex-direction:column;gap:2px;max-width:86%;text-align:left;padding:10px 14px;border-radius:18px;background:var(--surface);border:1px solid var(--line);transition:box-shadow .2s,transform .2s}
+.bub.l{align-self:flex-start;border-bottom-left-radius:6px}
+.bub.r{align-self:flex-end;background:var(--accent-soft);border-bottom-right-radius:6px}
+.bub .who{font-size:11px;font-weight:900;color:var(--muted)}
+.bub .en{font-family:var(--display);font-weight:600;font-size:16px}
+.bub .zh{font-size:13px;color:var(--muted)}
+.bub.now{box-shadow:0 0 0 3px var(--sun);transform:scale(1.02)}
+.qtools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:8px}
+.chipbtn{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13px}
+.chipbtn svg{width:16px;height:16px}
+.inl.sm{font-size:13px;color:var(--muted)}.inl.sm input{width:18px;height:18px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.fchip{padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:14px}
+.fchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.empty{text-align:center;color:var(--muted);padding:20px 0}
+.del{color:var(--bad);font-size:13px;font-weight:700}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="16" cy="18" rx="14" ry="4.5" fill="none" stroke="var(--sun)" stroke-width="2.4"/><circle cx="16" cy="15" r="8.5" fill="var(--accent)"/><path d="M2.3 17.2c1 2.6 6.8 4.6 13.7 4.6s12.7-2 13.7-4.6" fill="none" stroke="var(--sun)" stroke-width="2.4"/><circle cx="13" cy="12.5" r="2" fill="#fff" opacity=".7"/></svg>
+    字卡星球
+  </div>
+  <div class="streak" title="連續學習天數"><span aria-hidden="true">🔥</span><span id="streakN">0</span></div>
+</header>
+<main id="app"></main>
+<nav class="tabs" id="tabs"></nav>
+
+<script>
+const IC={
+home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2z"/><path d="M5 18a2 2 0 0 1 2-2h12"/></svg>',
+plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+bolt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>',
+ear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>',
+cards:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="14" height="14" rx="2"/><path d="M7 6V4h14v14h-4"/></svg>',
+check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>',
+spk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg>',
+left:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>'
+};
+
+const BUILTIN=[
+{"id":"greet","name":"打招呼與禮貌用語","tag":"基礎","level":"A1","words":[["hello","int.","你好","Hello, I'm Amy."],["hi","int.","嗨","Hi, Tom!"],["goodbye","int.","再見","Goodbye, see you tomorrow."],["please","adv.","請","Please sit down."],["thank","v.","謝謝","Thank you very much."],["sorry","adj.","抱歉的","I'm sorry I'm late."],["yes","adv.","是","Yes, I like it."],["no","adv.","不","No, thank you."],["name","n.","名字","What's your name?"],["morning","n.","早上","Good morning!"],["night","n.","晚上","Good night, Mom."],["friend","n.","朋友","Ben is my friend."]]},
+{"id":"num","name":"數字","tag":"基礎","level":"A1","words":[["one","n.","一","I have one sister."],["two","n.","二","Two cats are sleeping."],["three","n.","三","I have three pens."],["four","n.","四","A dog has four legs."],["five","n.","五","Give me five!"],["six","n.","六","It's six o'clock."],["seven","n.","七","A week has seven days."],["eight","n.","八","I get up at eight."],["nine","n.","九","She is nine years old."],["ten","n.","十","Count to ten."],["eleven","n.","十一","There are eleven players."],["twelve","n.","十二","A year has twelve months."],["twenty","n.","二十","I have twenty dollars."],["hundred","n.","百","One hundred people came."]]},
+{"id":"color","name":"顏色","tag":"基礎","level":"A1","words":[["red","adj.","紅色的","The apple is red."],["blue","adj.","藍色的","The sky is blue."],["green","adj.","綠色的","The grass is green."],["yellow","adj.","黃色的","Bananas are yellow."],["black","adj.","黑色的","My cat is black."],["white","adj.","白色的","Snow is white."],["pink","adj.","粉紅色的","She has a pink bag."],["orange","adj.","橘色的","I like the orange car."],["purple","adj.","紫色的","Grapes can be purple."],["brown","adj.","棕色的","The bear is brown."],["gray","adj.","灰色的","It's a gray day."],["color","n.","顏色","What color is it?"]]},
+{"id":"family","name":"人與家庭","tag":"生活","level":"A1","words":[["family","n.","家庭","There are five people in my family."],["father","n.","爸爸","My father is tall."],["mother","n.","媽媽","My mother cooks dinner."],["brother","n.","兄弟","My brother plays ball."],["sister","n.","姊妹","My sister is ten."],["grandfather","n.","爺爺；外公","My grandfather is kind."],["grandmother","n.","奶奶；外婆","My grandmother tells stories."],["baby","n.","嬰兒","The baby is sleeping."],["uncle","n.","叔叔；舅舅","My uncle can cook well."],["aunt","n.","阿姨；姑姑","Aunt May gave me a book."],["cousin","n.","表(堂)兄弟姊妹","My cousin lives next door."],["parent","n.","父母親","My parents work in Tainan."]]},
+{"id":"body","name":"身體部位","tag":"生活","level":"A1","words":[["head","n.","頭","My head hurts."],["face","n.","臉","Wash your face."],["eye","n.","眼睛","She has big eyes."],["ear","n.","耳朵","Rabbits have long ears."],["nose","n.","鼻子","Touch your nose."],["mouth","n.","嘴巴","Open your mouth."],["tooth","n.","牙齒","Brush your teeth."],["hair","n.","頭髮","Her hair is long."],["hand","n.","手","Raise your hand."],["arm","n.","手臂","He hurt his arm."],["leg","n.","腿","A bird has two legs."],["foot","n.","腳","My foot is cold."]]},
+{"id":"animal","name":"動物","tag":"生活","level":"A1","words":[["dog","n.","狗","The dog is cute."],["cat","n.","貓","I have a cat."],["bird","n.","鳥","A bird can fly."],["fish","n.","魚","Fish live in water."],["rabbit","n.","兔子","The rabbit eats carrots."],["pig","n.","豬","The pig is fat."],["cow","n.","母牛","Cows give us milk."],["horse","n.","馬","He rides a horse."],["duck","n.","鴨子","The duck can swim."],["tiger","n.","老虎","The tiger is strong."],["monkey","n.","猴子","Monkeys like bananas."],["elephant","n.","大象","Elephants are big."]]},
+{"id":"food","name":"食物與飲料","tag":"生活","level":"A1","words":[["rice","n.","米飯","I eat rice every day."],["bread","n.","麵包","I have bread for breakfast."],["egg","n.","蛋","I want two eggs."],["milk","n.","牛奶","Drink your milk."],["water","n.","水","Can I have some water?"],["apple","n.","蘋果","An apple a day is good."],["banana","n.","香蕉","The banana is yellow."],["cake","n.","蛋糕","Happy birthday! Here's a cake."],["tea","n.","茶","Grandpa likes tea."],["juice","n.","果汁","A glass of orange juice, please."],["noodle","n.","麵條","Beef noodles are popular in Taiwan."],["breakfast","n.","早餐","I eat breakfast at seven."],["lunch","n.","午餐","Let's have lunch."],["dinner","n.","晚餐","Dinner is ready."]]},
+{"id":"home","name":"家裡的東西","tag":"生活","level":"A1","words":[["house","n.","房子","This is my house."],["room","n.","房間","My room is small."],["door","n.","門","Close the door, please."],["window","n.","窗戶","Open the window."],["table","n.","桌子","The book is on the table."],["chair","n.","椅子","Sit on the chair."],["bed","n.","床","Go to bed."],["kitchen","n.","廚房","Mom is in the kitchen."],["bathroom","n.","浴室","Where is the bathroom?"],["TV","n.","電視","I watch TV after dinner."],["phone","n.","電話；手機","Where is my phone?"],["key","n.","鑰匙","Don't forget your key."]]},
+{"id":"clothes","name":"衣服","tag":"生活","level":"A1","words":[["shirt","n.","襯衫","He wears a white shirt."],["T-shirt","n.","T恤","I like this T-shirt."],["pants","n.","長褲","These pants are too long."],["skirt","n.","裙子","She has a red skirt."],["dress","n.","洋裝","What a pretty dress!"],["shoes","n.","鞋子","Put on your shoes."],["socks","n.","襪子","My socks are wet."],["hat","n.","帽子","Wear a hat in the sun."],["coat","n.","外套","It's cold. Wear your coat."],["bag","n.","包包","My bag is heavy."]]},
+{"id":"school","name":"學校生活","tag":"學校","level":"A1","words":[["school","n.","學校","I go to school by bus."],["teacher","n.","老師","Our teacher is nice."],["student","n.","學生","I'm a student."],["class","n.","班級；課","English class starts at nine."],["book","n.","書","Open your book."],["pen","n.","原子筆","Can I use your pen?"],["pencil","n.","鉛筆","Write with a pencil."],["eraser","n.","橡皮擦","Can I borrow your eraser?"],["desk","n.","書桌","Put it on your desk."],["classroom","n.","教室","Our classroom is on the third floor."],["homework","n.","回家作業","I finish my homework after dinner."],["test","n.","考試","We have a test today."]]},
+{"id":"feel","name":"心情與描述","tag":"描述","level":"A1","words":[["happy","adj.","快樂的","I'm happy today."],["sad","adj.","傷心的","Why are you sad?"],["angry","adj.","生氣的","Don't be angry."],["tired","adj.","累的","I'm tired after school."],["hungry","adj.","飢餓的","I'm hungry. Let's eat."],["thirsty","adj.","口渴的","I'm thirsty after running."],["big","adj.","大的","That's a big dog."],["small","adj.","小的","The cup is small."],["good","adj.","好的","Good job!"],["bad","adj.","壞的","That's a bad idea."],["new","adj.","新的","I have a new bike."],["old","adj.","舊的；老的","This book is old."]]},
+{"id":"verbs","name":"常用動詞","tag":"動詞","level":"A1","words":[["go","v.","去","Let's go!"],["come","v.","來","Come here, please."],["eat","v.","吃","I eat an apple."],["drink","v.","喝","Drink some water."],["see","v.","看見","I can see a bird."],["look","v.","看","Look at me."],["like","v.","喜歡","I like dogs."],["want","v.","想要","I want a new bag."],["play","v.","玩","Let's play ball."],["read","v.","閱讀","I read a book every night."],["write","v.","寫","Write your name here."],["sleep","v.","睡覺","The baby is sleeping."],["run","v.","跑","He can run fast."],["help","v.","幫忙","Can you help me?"]]},
+{"id":"fruit","name":"水果與蔬菜","tag":"生活","level":"A1","words":[["orange","n.","柳橙","I eat an orange."],["grape","n.","葡萄","These grapes are sweet."],["watermelon","n.","西瓜","Watermelon is good in summer."],["strawberry","n.","草莓","I love strawberry cake."],["lemon","n.","檸檬","Lemons are sour."],["mango","n.","芒果","Tainan mangoes are sweet."],["pineapple","n.","鳳梨","Pineapple cake is famous in Taiwan."],["tomato","n.","番茄","Tomatoes are red."],["potato","n.","馬鈴薯","I like potato chips."],["carrot","n.","紅蘿蔔","Rabbits eat carrots."],["corn","n.","玉米","Corn soup is hot."],["vegetable","n.","蔬菜","Eat more vegetables."]]},
+{"id":"month","name":"月份與星期","tag":"基礎","level":"A1","words":[["January","n.","一月","January is cold."],["February","n.","二月","Chinese New Year is often in February."],["March","n.","三月","Spring starts in March."],["April","n.","四月","April has thirty days."],["May","n.","五月","Mother's Day is in May."],["June","n.","六月","School ends in June."],["July","n.","七月","July is hot."],["August","n.","八月","Father's Day is in August in Taiwan."],["September","n.","九月","School starts in September."],["October","n.","十月","It's October now."],["November","n.","十一月","November is cool."],["December","n.","十二月","Christmas is in December."],["Tuesday","n.","星期二","I have piano class on Tuesday."],["Wednesday","n.","星期三","Wednesday is in the middle of the week."],["Thursday","n.","星期四","See you on Thursday."],["Friday","n.","星期五","I love Friday!"],["Saturday","n.","星期六","We go shopping on Saturday."]]},
+{"id":"nature","name":"大自然","tag":"生活","level":"A1","words":[["sun","n.","太陽","The sun is hot."],["moon","n.","月亮","The moon is round tonight."],["star","n.","星星","I see many stars."],["sky","n.","天空","The sky is blue."],["tree","n.","樹","There is a big tree in the park."],["flower","n.","花","The flower smells good."],["river","n.","河","Fish swim in the river."],["mountain","n.","山","We climb the mountain."],["sea","n.","海","I swim in the sea."],["rain","n.","雨","I like the sound of rain."],["wind","n.","風","The wind is strong."],["cloud","n.","雲","Look at that white cloud."]]},
+{"id":"phrase1","name":"日常短句・見面聊天","tag":"短句","level":"A1","words":[["How are you?","phr.","你好嗎？","How are you? — I'm fine, thank you."],["I'm fine, thank you.","phr.","我很好，謝謝。","How are you? — I'm fine, thank you."],["Nice to meet you.","phr.","很高興認識你。","Hi, I'm Ken. Nice to meet you."],["What's your name?","phr.","你叫什麼名字？","What's your name? — My name is Amy."],["My name is...","phr.","我的名字是…","My name is Lily."],["How old are you?","phr.","你幾歲？","How old are you? — I'm twelve."],["See you later.","phr.","待會見。","I have to go. See you later."],["Have a nice day.","phr.","祝你有美好的一天。","Bye! Have a nice day."],["You're welcome.","phr.","不客氣。","Thank you! — You're welcome."],["Excuse me.","phr.","不好意思；借過。","Excuse me, where is the station?"],["That's OK.","phr.","沒關係。","I'm sorry. — That's OK."],["Good job!","phr.","做得好！","You got 100. Good job!"]]},
+{"id":"pron","name":"人稱代名詞","tag":"基礎","level":"A1","words":[["I","pron.","我","I am a student."],["you","pron.","你；你們","You are my friend."],["he","pron.","他","He is my brother."],["she","pron.","她","She is a teacher."],["it","pron.","它；牠","It is a cat."],["we","pron.","我們","We are classmates."],["they","pron.","他們","They are at the park."],["my","det.","我的","This is my bag."],["your","det.","你的；你們的","Is this your pen?"],["his","det.","他的","His name is Ken."],["her","det.","她的","Her dress is pretty."],["our","det.","我們的","Our school is big."],["their","det.","他們的","Their house is new."]]},
+{"id":"place","name":"地方與交通","tag":"生活","level":"A2","words":[["park","n.","公園","Let's go to the park."],["store","n.","商店","The store is open."],["hospital","n.","醫院","The doctor works in a hospital."],["library","n.","圖書館","Be quiet in the library."],["restaurant","n.","餐廳","The restaurant opens at noon."],["zoo","n.","動物園","We saw pandas at the zoo."],["bus","n.","公車","I take the bus."],["car","n.","汽車","Dad drives a car."],["bike","n.","腳踏車","I ride my bike to school."],["train","n.","火車","The train is fast."],["street","n.","街道","Cross the street carefully."],["home","n.","家","I go home at five."]]},
+{"id":"time","name":"時間與天氣","tag":"生活","level":"A2","words":[["today","n.","今天","Today is Monday."],["tomorrow","n.","明天","See you tomorrow."],["yesterday","n.","昨天","I was busy yesterday."],["week","n.","星期","I swim once a week."],["Sunday","n.","星期日","We rest on Sunday."],["Monday","n.","星期一","School starts on Monday."],["hot","adj.","熱的","It's hot in summer."],["cold","adj.","冷的","It's cold today."],["sunny","adj.","晴朗的","It's sunny outside."],["rainy","adj.","下雨的","Take an umbrella on rainy days."],["summer","n.","夏天","I like summer."],["winter","n.","冬天","Winter is cold."]]},
+{"id":"job","name":"職業","tag":"職場","level":"A2","words":[["doctor","n.","醫生","The doctor helps sick people."],["nurse","n.","護理師","My aunt is a nurse."],["cook","n.","廚師","He is a good cook."],["driver","n.","司機","The bus driver is nice."],["farmer","n.","農夫","The farmer grows rice."],["police","n.","警察","Call the police!"],["worker","n.","工人","The workers are busy."],["singer","n.","歌手","She wants to be a singer."],["artist","n.","藝術家","The artist draws well."],["job","n.","工作","What's your job?"]]},
+{"id":"sport","name":"運動與休閒","tag":"生活","level":"A2","words":[["ball","n.","球","Throw me the ball."],["basketball","n.","籃球","We play basketball after school."],["baseball","n.","棒球","Baseball is popular in Taiwan."],["swim","v.","游泳","I can swim."],["dance","v.","跳舞","She likes to dance."],["sing","v.","唱歌","Let's sing a song."],["draw","v.","畫畫","I draw a cat."],["game","n.","遊戲；比賽","Let's play a game."],["movie","n.","電影","We watch a movie on Sunday."],["music","n.","音樂","I listen to music."],["song","n.","歌","This song is nice."],["picture","n.","圖片；照片","Look at this picture."]]},
+{"id":"where","name":"位置與方向","tag":"基礎","level":"A2","words":[["in","prep.","在…裡面","The cat is in the box."],["on","prep.","在…上面","The book is on the desk."],["under","prep.","在…下面","The dog is under the table."],["next to","prep.","在…旁邊","I sit next to Amy."],["behind","prep.","在…後面","The ball is behind the door."],["in front of","prep.","在…前面","The bus stops in front of the school."],["between","prep.","在…之間","The bank is between the park and the store."],["left","n.","左邊","Turn left."],["right","n.","右邊","Turn right here."],["up","adv.","向上","Stand up, please."],["down","adv.","向下","Sit down, please."],["here","adv.","這裡","Come here."],["there","adv.","那裡","Put it there."]]},
+{"id":"ask","name":"問句好幫手","tag":"基礎","level":"A2","words":[["what","pron.","什麼","What is this?"],["who","pron.","誰","Who is she?"],["where","adv.","哪裡","Where is my bag?"],["when","adv.","何時","When is your birthday?"],["why","adv.","為什麼","Why are you late?"],["how","adv.","如何；怎麼樣","How are you?"],["which","pron.","哪一個","Which one do you like?"],["how many","phr.","多少（可數）","How many books do you have?"],["how much","phr.","多少錢","How much is this?"],["how old","phr.","幾歲","How old are you?"]]},
+{"id":"phrase2","name":"日常短句・生活用語","tag":"短句","level":"A2","words":[["Can you help me?","phr.","你可以幫我嗎？","Can you help me with this box?"],["I don't know.","phr.","我不知道。","Where is Tom? — I don't know."],["I don't understand.","phr.","我聽不懂。","Sorry, I don't understand."],["Can you say that again?","phr.","可以再說一次嗎？","Can you say that again, please?"],["How much is it?","phr.","這個多少錢？","How much is it? — It's fifty dollars."],["I'm hungry.","phr.","我餓了。","I'm hungry. Let's eat."],["What time is it?","phr.","現在幾點？","What time is it? — It's three o'clock."],["Where is the bathroom?","phr.","廁所在哪裡？","Excuse me, where is the bathroom?"],["I like it.","phr.","我喜歡它。","This bag is cute. I like it."],["Let's go!","phr.","我們走吧！","The bus is here. Let's go!"],["Be careful.","phr.","小心。","The floor is wet. Be careful."],["Wait a minute.","phr.","等一下。","Wait a minute, I'm coming."]]},
+{"id":"work1","name":"職場英文・辦公室","tag":"職場","level":"A2","words":[["office","n.","辦公室","I work in an office."],["company","n.","公司","She works for a big company."],["boss","n.","老闆；上司","My boss is in a meeting."],["coworker","n.","同事","My coworkers are friendly."],["meeting","n.","會議","The meeting starts at ten."],["email","n.","電子郵件","I'll send you an email."],["report","n.","報告","Please finish the report today."],["schedule","n.","時間表；行程","Let me check my schedule."],["computer","n.","電腦","My computer is slow."],["printer","n.","印表機","The printer is out of paper."],["customer","n.","客人；顧客","The customer is waiting."],["salary","n.","薪水","We get our salary every month."],["holiday","n.","假日","Monday is a holiday."],["busy","adj.","忙碌的","I'm busy this week."],["overtime","n.","加班","I worked overtime yesterday."]]},
+{"id":"work2","name":"職場英文・常用句","tag":"職場","level":"A2","words":[["Good morning, everyone.","phr.","大家早安。","Good morning, everyone. Let's begin."],["Let me check.","phr.","我確認一下。","Is the order ready? — Let me check."],["I'll call you back.","phr.","我等一下回電給你。","I'm busy now. I'll call you back."],["Could you send me the file?","phr.","可以把檔案寄給我嗎？","Could you send me the file by noon?"],["I'm working on it.","phr.","我正在處理。","Is the report done? — I'm working on it."],["When is the deadline?","phr.","截止期限是什麼時候？","When is the deadline? — Friday."],["Sorry for the late reply.","phr.","抱歉晚回覆。","Sorry for the late reply. Here is the list."],["Can we meet tomorrow?","phr.","我們明天可以見面嗎？","Can we meet tomorrow at two?"],["I'm off today.","phr.","我今天休假。","I can't come. I'm off today."],["Thank you for your help.","phr.","謝謝你的幫忙。","Thank you for your help, Mr. Lee."]]},
+{"id":"travel1","name":"旅行英文・機場與飯店","tag":"旅行","level":"A2","words":[["airport","n.","機場","We get to the airport early."],["passport","n.","護照","Don't forget your passport."],["ticket","n.","票","I bought two tickets."],["flight","n.","班機","Our flight is at nine."],["gate","n.","登機門","Go to gate 12."],["seat","n.","座位","This is my seat."],["luggage","n.","行李","My luggage is heavy."],["hotel","n.","飯店","We stay at a hotel."],["map","n.","地圖","Let's look at the map."],["station","n.","車站","The station is near here."],["money","n.","錢","I need some money."],["camera","n.","相機","Take a picture with my camera."],["trip","n.","旅行","Have a good trip!"],["visit","v.","參觀；拜訪","We visit Japan every year."]]},
+{"id":"travel2","name":"旅行英文・常用句","tag":"旅行","level":"A2","words":[["Where is the station?","phr.","車站在哪裡？","Excuse me, where is the station?"],["How do I get to...?","phr.","我要怎麼去…？","How do I get to the museum?"],["I have a reservation.","phr.","我有預約（訂房／訂位）。","Hi, I have a reservation for two."],["Can I see the menu?","phr.","可以看菜單嗎？","Can I see the menu, please?"],["I'd like this one.","phr.","我要這個。","I'd like this one, please."],["Check, please.","phr.","請幫我結帳。","We're done. Check, please."],["Can I pay by card?","phr.","可以刷卡嗎？","Can I pay by card here?"],["Can you take a picture for us?","phr.","可以幫我們拍照嗎？","Excuse me, can you take a picture for us?"],["Is it far from here?","phr.","離這裡遠嗎？","Is it far from here? — No, it's close."],["I'm lost.","phr.","我迷路了。","Excuse me, I'm lost. Can you help me?"],["One ticket, please.","phr.","請給我一張票。","One ticket to Kyoto, please."],["Where can I take a taxi?","phr.","哪裡可以搭計程車？","Where can I take a taxi?"]]},
+{"id":"routine","name":"每天做的事","tag":"生活","level":"A2","words":[["wake up","phr.","醒來","I wake up at six thirty."],["get up","phr.","起床","Get up! It's late."],["brush","v.","刷","I brush my teeth every morning."],["wash","v.","洗","Wash your hands before dinner."],["cook","v.","煮；做菜","Dad cooks on Sunday."],["clean","v.","打掃","I clean my room on Saturday."],["walk","v.","走路","I walk to school."],["open","v.","打開","Open the door, please."],["close","v.","關上","Close your book."],["sit","v.","坐","Sit here, please."],["stand","v.","站","Stand in line."],["take","v.","拿；搭乘","Take an umbrella."],["give","v.","給","Give me the pen, please."],["buy","v.","買","I buy milk at the store."],["listen","v.","聽","Listen to the teacher."],["talk","v.","說話","We talk on the phone."]]},
+{"id":"opposite","name":"相反詞","tag":"描述","level":"A2","words":[["long","adj.","長的","Her hair is long."],["short","adj.","短的；矮的","This pencil is short."],["tall","adj.","高的","My brother is tall."],["fast","adj.","快的","The train is fast."],["slow","adj.","慢的","The turtle is slow."],["easy","adj.","簡單的","This test is easy."],["difficult","adj.","困難的","Math is difficult for me."],["cheap","adj.","便宜的","This pen is cheap."],["expensive","adj.","昂貴的","The bag is expensive."],["dirty","adj.","髒的","My shoes are dirty."],["early","adj.","早的","I'm early today."],["late","adj.","晚的；遲的","Don't be late."],["heavy","adj.","重的","This box is heavy."],["light","adj.","輕的","The bag is light."],["full","adj.","滿的；飽的","I'm full, thank you."],["empty","adj.","空的","The bottle is empty."],["young","adj.","年輕的","My mom looks young."],["quiet","adj.","安靜的","The library is quiet."],["noisy","adj.","吵鬧的","The street is noisy."]]},
+{"id":"often","name":"頻率與時間","tag":"基礎","level":"A2","words":[["always","adv.","總是","I always eat breakfast."],["usually","adv.","通常","I usually go to bed at ten."],["often","adv.","常常","We often play basketball."],["sometimes","adv.","有時候","Sometimes I walk to school."],["never","adv.","從不","I never drink coffee."],["every day","phr.","每天","I read English every day."],["now","adv.","現在","I'm busy now."],["later","adv.","稍後","Call me later."],["soon","adv.","很快","See you soon."],["before","prep.","在…之前","Wash your hands before lunch."],["after","prep.","在…之後","I play after school."],["again","adv.","再一次","Say it again, please."],["o'clock","adv.","…點鐘","It's three o'clock."],["minute","n.","分鐘","Wait five minutes."],["hour","n.","小時","I sleep eight hours."]]},
+{"id":"order","name":"序數與大數字","tag":"基礎","level":"A2","words":[["first","adj.","第一","I'm the first in line."],["second","adj.","第二","Take the second street on the left."],["third","adj.","第三","My room is on the third floor."],["fourth","adj.","第四","It's his fourth time here."],["fifth","adj.","第五","Today is her fifth birthday."],["last","adj.","最後的","This is the last bus."],["thirteen","n.","十三","She is thirteen."],["fifteen","n.","十五","Wait fifteen minutes."],["thirty","n.","三十","There are thirty students."],["forty","n.","四十","It costs forty dollars."],["fifty","n.","五十","My dad is fifty."],["thousand","n.","千","One thousand dollars, please."]]},
+{"id":"subject","name":"學科","tag":"學校","level":"A2","words":[["English","n.","英文","I study English every day."],["Chinese","n.","中文；國文","Chinese is my favorite subject."],["math","n.","數學","Math is not easy."],["science","n.","自然科學","We do tests in science class."],["history","n.","歷史","I like history stories."],["art","n.","美術","We draw in art class."],["PE","n.","體育課","We run in PE class."],["subject","n.","科目","What's your favorite subject?"],["lesson","n.","課；一堂課","Lesson Two is easy."],["question","n.","問題","Can I ask a question?"],["answer","n.","答案","I know the answer."],["word","n.","單字","Learn five new words."]]},
+{"id":"shop","name":"購物與金錢","tag":"生活","level":"A2","words":[["market","n.","市場","Mom buys fish at the market."],["supermarket","n.","超市","The supermarket is open until ten."],["convenience store","n.","便利商店","There is a convenience store on every street."],["price","n.","價格","The price is good."],["dollar","n.","元","It's ten dollars."],["coin","n.","硬幣","I have some coins."],["cash","n.","現金","Can I pay in cash?"],["change","n.","找零","Here is your change."],["sale","n.","特價","These shoes are on sale."],["size","n.","尺寸","What size do you wear?"],["pay","v.","付錢","I'll pay for lunch."],["sell","v.","賣","They sell fruit here."],["shopping","n.","購物","Let's go shopping."]]},
+{"id":"health","name":"健康與看病","tag":"健康","level":"A2","words":[["sick","adj.","生病的","I'm sick today."],["fever","n.","發燒","She has a fever."],["cough","n.","咳嗽","I have a bad cough."],["headache","n.","頭痛","I have a headache."],["stomachache","n.","肚子痛","I ate too much and have a stomachache."],["toothache","n.","牙痛","Go to the dentist if you have a toothache."],["medicine","n.","藥","Take this medicine after meals."],["dentist","n.","牙醫","I see the dentist twice a year."],["hurt","v.","受傷；疼痛","My leg hurts."],["rest","v.","休息","You should rest at home."],["healthy","adj.","健康的","Fruit is healthy."],["clinic","n.","診所","The clinic opens at nine."]]},
+{"id":"festival","name":"節日與慶祝","tag":"生活","level":"A2","words":[["birthday","n.","生日","Happy birthday!"],["party","n.","派對","Come to my party."],["gift","n.","禮物","This gift is for you."],["card","n.","卡片","I made a card for Mom."],["Chinese New Year","n.","農曆新年","We eat dumplings at Chinese New Year."],["red envelope","n.","紅包","Grandma gives me a red envelope."],["Moon Festival","n.","中秋節","We have a barbecue on Moon Festival."],["Dragon Boat Festival","n.","端午節","We eat rice dumplings on Dragon Boat Festival."],["Christmas","n.","聖誕節","Merry Christmas!"],["fireworks","n.","煙火","The fireworks are beautiful."],["celebrate","v.","慶祝","Let's celebrate!"],["vacation","n.","假期","Summer vacation is coming."]]},
+{"id":"city","name":"城市裡的地方","tag":"生活","level":"A2","words":[["bank","n.","銀行","The bank closes at three thirty."],["post office","n.","郵局","I send letters at the post office."],["police station","n.","警察局","The police station is near the park."],["bookstore","n.","書店","I buy books at the bookstore."],["night market","n.","夜市","Let's eat at the night market."],["temple","n.","廟","There are many temples in Tainan."],["museum","n.","博物館","The museum is free on Sunday."],["bus stop","n.","公車站","Wait at the bus stop."],["building","n.","大樓","That building is very tall."],["city","n.","城市","Tainan is an old city."],["country","n.","國家","Japan is a beautiful country."],["road","n.","路","This road is busy."]]},
+{"id":"phrase3","name":"日常短句・餐廳點餐","tag":"短句","level":"A2","words":[["Table for two, please.","phr.","兩位，謝謝。","Hi! Table for two, please."],["For here or to go?","phr.","內用還是外帶？","For here or to go? — To go, please."],["To go, please.","phr.","外帶，謝謝。","Coffee, to go, please."],["What do you recommend?","phr.","你推薦什麼？","It's my first time here. What do you recommend?"],["Is this spicy?","phr.","這個會辣嗎？","Is this spicy? — A little."],["No ice, please.","phr.","去冰，謝謝。","Green tea, no ice, please."],["Less sugar, please.","phr.","少糖，謝謝。","Milk tea, less sugar, please."],["Can I have some water?","phr.","可以給我一些水嗎？","Excuse me, can I have some water?"],["It's delicious.","phr.","很好吃。","Wow, it's delicious!"],["I'm full.","phr.","我吃飽了。","No more, thanks. I'm full."]]},
+{"id":"phrase4","name":"日常短句・回應與心情","tag":"短句","level":"A2","words":[["Me too.","phr.","我也是。","I like pizza. — Me too."],["Really?","phr.","真的嗎？","I got 100! — Really?"],["No problem.","phr.","沒問題。","Can you help me? — No problem."],["Don't worry.","phr.","別擔心。","Don't worry. It's OK."],["Take care.","phr.","保重。","Bye! Take care."],["Good luck!","phr.","祝你好運！","Good luck on your test!"],["Congratulations!","phr.","恭喜！","You won? Congratulations!"],["I think so.","phr.","我想是的。","Is it going to rain? — I think so."],["Of course.","phr.","當然。","Can I sit here? — Of course."],["I'm so happy.","phr.","我好開心。","I'm so happy to see you."],["Hurry up!","phr.","快一點！","Hurry up! The bus is here."],["Just a moment.","phr.","請稍等。","Just a moment, please."]]},
+{"id":"work3","name":"職場英文・工作事務","tag":"職場","level":"B1","words":[["manager","n.","經理","Our manager is very busy."],["team","n.","團隊","We are a good team."],["project","n.","專案","The project ends in May."],["client","n.","客戶","I have a meeting with a client."],["department","n.","部門","She works in the sales department."],["interview","n.","面試","I have a job interview tomorrow."],["deadline","n.","截止期限","The deadline is Friday."],["document","n.","文件","Please sign this document."],["presentation","n.","簡報","I'm giving a presentation today."],["order","n.","訂單","We got a big order."],["sign","v.","簽名","Sign your name here."],["send","v.","寄送","Please send it today."],["finish","v.","完成","I'll finish it by five."],["break","n.","休息時間","Let's take a ten-minute break."]]},
+{"id":"travel3","name":"旅行英文・交通與觀光","tag":"旅行","level":"B1","words":[["subway","n.","地鐵","Take the subway to the airport."],["taxi","n.","計程車","Let's take a taxi."],["platform","n.","月台","The train leaves from platform 3."],["transfer","v.","轉乘","Transfer at the next station."],["departure","n.","出發；起飛","Departure time is 10:30."],["arrival","n.","抵達","Arrival time is 2:15."],["delay","n.","延誤","There is a one-hour delay."],["tourist","n.","觀光客","Many tourists visit Tainan."],["souvenir","n.","紀念品","I bought a souvenir for my friend."],["beach","n.","海灘","We walked on the beach."],["guide","n.","導遊；指南","Our guide speaks English."],["weather","n.","天氣","How's the weather in Tokyo?"],["room key","n.","房卡；房間鑰匙","Here is your room key."],["breakfast included","phr.","含早餐","Is breakfast included?"]]},
+{"id":"m_daily","name":"日常生活進階","tag":"生活","level":"B1","words":[["appointment","n.","約診；約會","I have a dentist appointment at three."],["neighbor","n.","鄰居","Our neighbor is very friendly."],["furniture","n.","家具","We bought new furniture."],["garbage","n.","垃圾","Take out the garbage, please."],["laundry","n.","待洗衣物；洗衣","I do the laundry on Sunday."],["rent","n.","租金","The rent is due on the first."],["repair","v.","修理","Can you repair my bike?"],["deliver","v.","遞送","They deliver food until midnight."],["receipt","n.","收據","Please keep your receipt."],["refund","n.","退款","Can I get a refund?"],["discount","n.","折扣","Students get a ten percent discount."],["available","adj.","有空的；可取得的","Is this seat available?"],["convenient","adj.","方便的","The MRT is very convenient."],["crowded","adj.","擁擠的","The train is crowded in the morning."],["errand","n.","差事；跑腿","I have some errands to run."]]},
+{"id":"m_feel","name":"情緒與個性","tag":"描述","level":"B1","words":[["nervous","adj.","緊張的","I'm nervous before tests."],["excited","adj.","興奮的","The kids are excited about the trip."],["embarrassed","adj.","尷尬的","I felt embarrassed when I fell."],["disappointed","adj.","失望的","She was disappointed with the result."],["confident","adj.","有自信的","Be confident when you speak."],["patient","adj.","有耐心的","A good teacher is patient."],["honest","adj.","誠實的","He is an honest man."],["polite","adj.","有禮貌的","Please be polite to guests."],["lazy","adj.","懶惰的","Don't be lazy. Get up!"],["curious","adj.","好奇的","Children are curious about everything."],["worried","adj.","擔心的","Mom is worried about me."],["proud","adj.","驕傲的；自豪的","I'm proud of you."],["jealous","adj.","嫉妒的","He's jealous of his brother."],["generous","adj.","慷慨的","She is generous with her time."],["shy","adj.","害羞的","My son is shy around new people."]]},
+{"id":"m_verb","name":"常用動詞進階","tag":"動詞","level":"B1","words":[["decide","v.","決定","I decided to learn English."],["explain","v.","解釋","Can you explain this word?"],["improve","v.","改善；進步","My English is improving."],["suggest","v.","建議","I suggest we leave early."],["describe","v.","描述","Describe your hometown."],["compare","v.","比較","Compare these two prices."],["protect","v.","保護","Wear sunglasses to protect your eyes."],["receive","v.","收到","Did you receive my email?"],["avoid","v.","避免","Avoid eating too much sugar."],["allow","v.","允許","Pets are not allowed here."],["expect","v.","預期；期待","I didn't expect so many people."],["complain","v.","抱怨","He always complains about work."],["agree","v.","同意","I agree with you."],["discuss","v.","討論","Let's discuss it tomorrow."],["mention","v.","提到","She mentioned your name."]]},
+{"id":"m_study","name":"學習與考試","tag":"學校","level":"B1","words":[["grade","n.","成績；年級","I got a good grade in math."],["score","n.","分數","What was your score?"],["review","v.","複習","Review your notes before the test."],["note","n.","筆記","Take notes in class."],["dictionary","n.","字典","Look it up in the dictionary."],["vocabulary","n.","字彙","Reading helps your vocabulary."],["grammar","n.","文法","English grammar is not so hard."],["sentence","n.","句子","Make a sentence with this word."],["pronounce","v.","發音","How do you pronounce this word?"],["mistake","n.","錯誤","Everyone makes mistakes."],["knowledge","n.","知識","Knowledge is power."],["semester","n.","學期","The new semester starts in September."],["scholarship","n.","獎學金","She won a scholarship."],["graduate","v.","畢業","He graduated last year."],["memorize","v.","背誦；記住","I memorize ten words a day."]]},
+{"id":"m_work","name":"求職與工作","tag":"職場","level":"B1","words":[["colleague","n.","同事","My colleagues helped me a lot."],["resume","n.","履歷","Please send us your resume."],["apply","v.","申請；應徵","I applied for the job."],["position","n.","職位","The position is still open."],["experience","n.","經驗","Do you have work experience?"],["skill","n.","技能","Computer skills are important."],["responsible","adj.","負責的","Who is responsible for this?"],["promotion","n.","升遷","She got a promotion last month."],["retire","v.","退休","My dad will retire next year."],["part-time","adj.","兼職的","I have a part-time job."],["full-time","adj.","全職的","It's a full-time position."],["employee","n.","員工","The company has 200 employees."],["agenda","n.","議程","What's on the agenda today?"],["attend","v.","出席","I can't attend the meeting."],["shift","n.","輪班","I work the night shift."]]},
+{"id":"m_travel","name":"出國旅行","tag":"旅行","level":"B1","words":[["itinerary","n.","行程表","Here is our travel itinerary."],["reservation","n.","預訂","I made a reservation online."],["check in","phr.","辦理入住；報到","We can check in after three."],["check out","phr.","退房","Check out is at eleven."],["passenger","n.","乘客","All passengers, please board now."],["destination","n.","目的地","What's your final destination?"],["currency","n.","貨幣","What currency do they use in Korea?"],["exchange","v.","兌換","I need to exchange some money."],["customs","n.","海關","We went through customs quickly."],["boarding pass","n.","登機證","Show your boarding pass, please."],["round trip","n.","來回票","A round trip ticket, please."],["aisle seat","n.","走道座位","Can I have an aisle seat?"],["carry-on","n.","隨身行李","You can bring one carry-on."],["jet lag","n.","時差","I still have jet lag."],["sightseeing","n.","觀光","We went sightseeing in Kyoto."]]},
+{"id":"m_society","name":"社會與環境","tag":"社會","level":"B1","words":[["environment","n.","環境","We should protect the environment."],["pollution","n.","污染","Air pollution is bad today."],["recycle","v.","回收","Please recycle bottles."],["plastic","n.","塑膠","Use less plastic."],["energy","n.","能源；精力","Save energy at home."],["electricity","n.","電","Turn off lights to save electricity."],["government","n.","政府","The government built a new road."],["society","n.","社會","We live in a modern society."],["population","n.","人口","Taiwan's population is about 23 million."],["culture","n.","文化","I'm interested in Japanese culture."],["tradition","n.","傳統","Eating mooncakes is a tradition."],["community","n.","社區","Our community is clean and safe."],["volunteer","n.","志工","She works as a volunteer."],["citizen","n.","公民；市民","Every citizen can vote."],["safety","n.","安全","Safety comes first."]]},
+{"id":"m_phrase","name":"中級短句","tag":"短句","level":"B1","words":[["It depends.","phr.","看情況。","Will you come? — It depends."],["I'm looking forward to it.","phr.","我很期待。","The trip is next week. I'm looking forward to it."],["That makes sense.","phr.","有道理。","Oh, that makes sense now."],["I'm not sure.","phr.","我不確定。","Is it open today? — I'm not sure."],["What do you mean?","phr.","你的意思是？","What do you mean by that?"],["Let me think about it.","phr.","讓我想想。","It's a good idea. Let me think about it."],["It's up to you.","phr.","由你決定。","Pizza or noodles? — It's up to you."],["I'm used to it.","phr.","我習慣了。","The weather is hot, but I'm used to it."],["Never mind.","phr.","算了；沒關係。","Never mind, I'll do it myself."],["Sounds good.","phr.","聽起來不錯。","Dinner at seven? — Sounds good."],["I'll take care of it.","phr.","我來處理。","Don't worry. I'll take care of it."],["Could you do me a favor?","phr.","可以幫我個忙嗎？","Could you do me a favor and close the window?"]]},
+{"id":"b1_tech","name":"電腦與網路","tag":"科技","level":"B1","words":[["software","n.","軟體","Update your software regularly."],["hardware","n.","硬體","The hardware is too old."],["network","n.","網路","The network is down."],["password","n.","密碼","Never share your password."],["update","n.","更新","A new update is available."],["backup","n.","備份","Always keep a backup."],["download","v.","下載","Download the app for free."],["upload","v.","上傳","Upload the file here."],["browser","n.","瀏覽器","Open it in your browser."],["cloud","n.","雲端","Save your files to the cloud."],["website","n.","網站","Visit our website for details."],["app","n.","應用程式","Download our app for free."]]},
+{"id":"b1_med","name":"看病與醫療","tag":"健康","level":"B1","words":[["symptom","n.","症狀","What are your symptoms?"],["treatment","n.","治療","The treatment takes six weeks."],["surgery","n.","手術","He had surgery on his knee."],["patient","n.","病人","The patient is resting."],["pharmacy","n.","藥局","Pick up your medicine at the pharmacy."],["allergy","n.","過敏","Do you have any allergies?"],["blood pressure","n.","血壓","Let me check your blood pressure."],["vaccine","n.","疫苗","Get the flu vaccine every year."],["emergency room","n.","急診室","He was taken to the emergency room."],["side effect","n.","副作用","This medicine may have side effects."],["recovery","n.","康復","I wish you a quick recovery."],["infection","n.","感染","Wash your hands to prevent infection."]]},
+{"id":"b1_law","name":"法律與規定","tag":"法律","level":"B1","words":[["law","n.","法律","Everyone must follow the law."],["lawyer","n.","律師","You should talk to a lawyer."],["court","n.","法院","The case went to court."],["judge","n.","法官","The judge made a decision."],["rights","n.","權利","Know your rights."],["agreement","n.","協議","We reached an agreement."],["signature","n.","簽名","We need your signature here."],["valid","adj.","有效的","Your passport is valid until 2030."],["expire","v.","到期","My visa expires next month."],["license","n.","執照","He has a driver's license."],["illegal","adj.","違法的","Parking here is illegal."],["permission","n.","許可","You need permission to enter."]]},
+{"id":"b1_mkt","name":"商品與銷售","tag":"商務","level":"B1","words":[["marketing","n.","行銷","She works in marketing."],["brand","n.","品牌","It's a famous brand."],["advertisement","n.","廣告","I saw the advertisement on TV."],["sales","n.","銷售；業績","Sales were up this month."],["survey","n.","問卷調查","Please fill out this survey."],["feedback","n.","回饋意見","Thanks for your feedback."],["customer service","n.","客服","Call customer service for help."],["sample","n.","樣品","Can we get a free sample?"],["product","n.","產品","This is our newest product."],["online shopping","n.","網購","Online shopping is very popular."],["membership","n.","會員資格","Membership is free."],["delivery","n.","配送","Delivery takes two days."]]},
+{"id":"b1_fin","name":"理財入門","tag":"金融","level":"B1","words":[["interest rate","n.","利率","The interest rate went up."],["stock","n.","股票","He invests in stocks."],["tax","n.","稅","Income tax is due in May."],["exchange rate","n.","匯率","The exchange rate changes every day."],["loan","n.","貸款","We applied for a bank loan."],["budget","n.","預算","We are over budget."],["savings","n.","存款；積蓄","I keep my savings in the bank."],["account","n.","帳戶","I opened a bank account."],["credit card","n.","信用卡","Can I pay by credit card?"],["invest","v.","投資","He invests in stocks."],["insurance","n.","保險","Do you have travel insurance?"],["debt","n.","債務","He paid off his debt."]]},
+{"id":"a_verb","name":"高級動詞","tag":"動詞","level":"B2","words":[["accomplish","v.","完成；達成","We accomplished our goal."],["acknowledge","v.","承認；確認收到","He acknowledged his mistake."],["anticipate","v.","預期","We anticipate some delays."],["clarify","v.","澄清；說明清楚","Could you clarify that point?"],["contribute","v.","貢獻","Everyone contributed to the project."],["emphasize","v.","強調","The teacher emphasized grammar."],["evaluate","v.","評估","We need to evaluate the results."],["implement","v.","實施；執行","The plan will be implemented next month."],["interpret","v.","解讀；口譯","How do you interpret this data?"],["maintain","v.","維持；保養","It's hard to maintain a healthy diet."],["negotiate","v.","協商；談判","They negotiated a better price."],["overcome","v.","克服","She overcame many difficulties."],["postpone","v.","延後","The game was postponed because of rain."],["pursue","v.","追求","He wants to pursue a career in design."],["undergo","v.","經歷；接受（手術等）","The city is undergoing big changes."]]},
+{"id":"a_adj","name":"高級形容詞","tag":"描述","level":"B2","words":[["adequate","adj.","足夠的；適當的","Make sure you get adequate sleep."],["ambiguous","adj.","模稜兩可的","The answer was ambiguous."],["crucial","adj.","關鍵的","Timing is crucial."],["efficient","adj.","有效率的","This system is very efficient."],["enormous","adj.","巨大的","They spent an enormous amount of money."],["essential","adj.","必要的","Water is essential for life."],["flexible","adj.","有彈性的","My working hours are flexible."],["inevitable","adj.","不可避免的","Change is inevitable."],["reluctant","adj.","不情願的","He was reluctant to help."],["sufficient","adj.","充足的","We have sufficient time."],["substantial","adj.","大量的；可觀的","Prices rose by a substantial amount."],["temporary","adj.","暫時的","This is only a temporary job."],["transparent","adj.","透明的；公開的","The process should be transparent."],["vulnerable","adj.","脆弱的；易受傷害的","Old people are vulnerable to the flu."],["reliable","adj.","可靠的","Is this information reliable?"]]},
+{"id":"a_idea","name":"抽象概念","tag":"觀念","level":"B2","words":[["perspective","n.","觀點；角度","Try to see it from my perspective."],["consequence","n.","後果","Think about the consequences."],["priority","n.","優先事項","Safety is our top priority."],["strategy","n.","策略","We need a new strategy."],["opportunity","n.","機會","This is a great opportunity."],["challenge","n.","挑戰","Learning a language is a challenge."],["approach","n.","方法；途徑","Let's try a different approach."],["phenomenon","n.","現象","It's a common phenomenon."],["hypothesis","n.","假設","The data supports our hypothesis."],["criteria","n.","標準（複數）","What are the criteria for selection?"],["evidence","n.","證據","There is no evidence of that."],["factor","n.","因素","Price is an important factor."],["impact","n.","影響；衝擊","Social media has a big impact on teens."],["trend","n.","趨勢","Online shopping is a growing trend."],["requirement","n.","要求；必要條件","What are the requirements for this job?"]]},
+{"id":"a_news","name":"新聞時事","tag":"社會","level":"B2","words":[["economy","n.","經濟","The economy is growing slowly."],["inflation","n.","通貨膨脹","Inflation makes everything more expensive."],["unemployment","n.","失業","Unemployment fell last year."],["election","n.","選舉","The election is in January."],["policy","n.","政策","The new policy starts next year."],["climate change","n.","氣候變遷","Climate change affects everyone."],["disaster","n.","災難","The earthquake was a disaster."],["technology","n.","科技","Technology changes fast."],["artificial intelligence","n.","人工智慧","Artificial intelligence is everywhere now."],["investment","n.","投資","Real estate is a popular investment."],["healthcare","n.","醫療照護","Taiwan has good healthcare."],["infrastructure","n.","基礎建設","The city needs better infrastructure."],["aging society","n.","高齡化社會","Taiwan is becoming an aging society."],["renewable energy","n.","再生能源","Solar power is a renewable energy."],["regulation","n.","法規；規定","There are new safety regulations."]]},
+{"id":"a_idiom","name":"片語與慣用語","tag":"片語","level":"B2","words":[["break the ice","phr.","打破僵局（讓氣氛熱絡）","He told a joke to break the ice."],["piece of cake","phr.","非常簡單的事","The test was a piece of cake."],["call it a day","phr.","今天到此為止","It's late. Let's call it a day."],["on the same page","phr.","想法一致","Let's make sure we're on the same page."],["hit the road","phr.","上路；出發","It's time to hit the road."],["get the hang of","phr.","掌握訣竅","You'll get the hang of it soon."],["keep an eye on","phr.","留意；看著","Keep an eye on my bag, please."],["figure out","phr.","想出；弄懂","I can't figure out this problem."],["run out of","phr.","用完","We ran out of milk."],["look forward to","phr.","期待","I look forward to seeing you."],["come up with","phr.","想出（點子）","She came up with a great idea."],["put off","phr.","延後；拖延","Don't put off your homework."],["give up","phr.","放棄","Never give up."],["take advantage of","phr.","利用","Take advantage of this sale."],["make up one's mind","phr.","下定決心","I can't make up my mind."]]},
+{"id":"a_phrase","name":"高級表達","tag":"短句","level":"B2","words":[["To be honest, ...","phr.","老實說…","To be honest, I don't like it."],["As far as I know, ...","phr.","據我所知…","As far as I know, the shop is closed today."],["It's worth a try.","phr.","值得一試。","It might not work, but it's worth a try."],["That's a good point.","phr.","說得好；有道理。","That's a good point. I didn't think of that."],["I see what you mean.","phr.","我懂你的意思。","I see what you mean, but I disagree."],["Let's get to the point.","phr.","我們直接講重點。","We don't have much time. Let's get to the point."],["I couldn't agree more.","phr.","我完全同意。","It's too expensive. — I couldn't agree more."],["It's not a big deal.","phr.","沒什麼大不了。","Don't worry. It's not a big deal."],["Better late than never.","phr.","遲做總比不做好。","You finally started? Better late than never."],["On second thought, ...","phr.","再想一想…","On second thought, I'll stay home."],["No wonder.","phr.","難怪。","He didn't sleep last night. — No wonder he's tired."],["It slipped my mind.","phr.","我忘了。","Sorry, it slipped my mind."]]},
+{"id":"p_mail","name":"商務書信與會議","tag":"商務","level":"B2","words":[["Please find attached ...","phr.","附件請查收…","Please find attached the report."],["I'm writing to ...","phr.","來信是為了…","I'm writing to confirm our meeting."],["Thank you for your prompt reply.","phr.","感謝您迅速回覆。","Thank you for your prompt reply."],["Please let me know if you have any questions.","phr.","有任何問題請告訴我。","Please let me know if you have any questions."],["I look forward to hearing from you.","phr.","期待您的回覆。","I look forward to hearing from you soon."],["Could we reschedule the meeting?","phr.","會議可以改期嗎？","Could we reschedule the meeting to Friday?"],["Let's move on to the next item.","phr.","我們進行下一個議題。","OK, let's move on to the next item."],["Could you walk me through it?","phr.","可以帶我看一遍嗎？","Could you walk me through the new system?"],["I'll follow up on this.","phr.","我會追蹤這件事。","I'll follow up on this tomorrow."],["Please keep me posted.","phr.","請隨時告訴我進度。","Please keep me posted on the order."],["As discussed, ...","phr.","如先前討論…","As discussed, the price is final."],["Best regards,","phr.","敬祝 順心（信件結尾）","Best regards, Amy Chen"]]},
+{"id":"b2_tech","name":"資訊科技","tag":"科技","level":"B2","words":[["database","n.","資料庫","All customer data is in the database."],["server","n.","伺服器","The server needs a restart."],["cybersecurity","n.","資訊安全","Cybersecurity is a big concern."],["algorithm","n.","演算法","The algorithm recommends videos."],["bug","n.","程式錯誤","We found a bug in the app."],["operating system","n.","作業系統","Update your operating system."],["user interface","n.","使用者介面","The user interface is easy to use."],["encryption","n.","加密","Encryption keeps your data safe."],["bandwidth","n.","頻寬","Video calls need more bandwidth."],["data privacy","n.","資料隱私","Data privacy is a big concern."],["automation","n.","自動化","Automation saves a lot of time."],["compatible","adj.","相容的","This app is compatible with iPhone."]]},
+{"id":"b2_mkt","name":"行銷與業務","tag":"商務","level":"B2","words":[["target audience","n.","目標客群","Our target audience is young people."],["campaign","n.","宣傳活動","The ad campaign was a success."],["launch","v.","推出（產品）","We will launch the product in May."],["competitor","n.","競爭對手","Our competitor lowered its price."],["market share","n.","市占率","We have 20 percent market share."],["quotation","n.","報價單","Please send us a quotation."],["trade show","n.","商展","We met them at a trade show."],["consumer","n.","消費者","Consumers want lower prices."],["profit","n.","利潤","Profits rose this year."],["promote","v.","推廣；促銷","We promote our products online."],["distributor","n.","經銷商","We are looking for a local distributor."],["retail","n.","零售","She works in retail."]]},
+{"id":"b2_biz","name":"商務合作","tag":"商務","level":"B2","words":[["revenue","n.","營收","Revenue grew by 12 percent."],["forecast","n.","預測","The sales forecast looks good."],["quarterly","adj.","每季的","Here is the quarterly report."],["partnership","n.","合作關係","We formed a partnership with a Japanese firm."],["proposal","n.","提案；企劃書","Please review my proposal."],["negotiation","n.","談判","The negotiation took three weeks."],["contract","n.","合約","Both sides signed the contract."],["headquarters","n.","總部","Our headquarters is in Taipei."],["branch","n.","分公司；分行","We opened a new branch in Tainan."],["minutes","n.","會議紀錄","Who will take the minutes?"],["estimate","n.","估計；估價","Can you give me an estimate?"],["approve","v.","核准","The manager approved the plan."]]},
+{"id":"c1_med","name":"醫療專業","tag":"健康","level":"C1","words":[["diagnosis","n.","診斷","The doctor made a quick diagnosis."],["prescription","n.","處方","You need a prescription for this medicine."],["chronic","adj.","慢性的","She has chronic back pain."],["outpatient","n.","門診病人","The outpatient clinic opens at eight."],["inpatient","n.","住院病人","Inpatients can have visitors until nine."],["anesthesia","n.","麻醉","The surgery is done under anesthesia."],["dosage","n.","劑量","Do not exceed the recommended dosage."],["contagious","adj.","具傳染性的","The flu is highly contagious."],["rehabilitation","n.","復健","He needs three months of rehabilitation."],["immune system","n.","免疫系統","Sleep helps your immune system."],["medical history","n.","病史","Tell the doctor your medical history."],["follow-up","n.","回診；後續追蹤","Book a follow-up in two weeks."]]},
+{"id":"c1_law","name":"合約與法務","tag":"法律","level":"C1","words":[["clause","n.","條款","Read this clause carefully."],["witness","n.","證人","There were two witnesses."],["terms and conditions","n.","條款與細則","Read the terms and conditions."],["confidential","adj.","機密的","This document is confidential."],["penalty","n.","罰款；罰則","There is a penalty for late payment."],["breach","n.","違反（合約）","That is a breach of contract."],["lawsuit","n.","訴訟","They filed a lawsuit against the company."],["compliance","n.","法規遵循","Compliance with safety rules is required."],["liable","adj.","負有法律責任的","The company is liable for the damage."],["amend","v.","修訂","We need to amend the agreement."],["jurisdiction","n.","管轄權","This case is outside our jurisdiction."],["arbitration","n.","仲裁","The dispute went to arbitration."]]},
+{"id":"c1_fin","name":"金融會計","tag":"金融","level":"C1","words":[["asset","n.","資產","The company has many assets."],["liability","n.","負債；責任","Loans are liabilities."],["equity","n.","股東權益","Total equity increased this year."],["dividend","n.","股利","The company pays a dividend every year."],["bond","n.","債券","Bonds are lower risk than stocks."],["portfolio","n.","投資組合","Diversify your portfolio."],["audit","n.","稽核；審計","The annual audit starts next week."],["balance sheet","n.","資產負債表","Check the balance sheet."],["cash flow","n.","現金流","Cash flow is important for small businesses."],["depreciation","n.","折舊","Depreciation lowers the value of equipment."],["accounts receivable","n.","應收帳款","Accounts receivable increased this quarter."],["fiscal year","n.","會計年度","Our fiscal year ends in December."]]},
+{"id":"c1_biz","name":"企業管理","tag":"商務","level":"C1","words":[["stakeholder","n.","利害關係人","We must update all stakeholders."],["profit margin","n.","利潤率","Our profit margin is too low."],["benchmark","n.","基準；標竿","We use last year as a benchmark."],["merger","n.","合併","The merger was announced today."],["acquisition","n.","收購","The acquisition cost two billion dollars."],["procurement","n.","採購","Procurement handles all purchases."],["supply chain","n.","供應鏈","The supply chain was disrupted."],["restructure","v.","重組","The company will restructure next year."],["outsource","v.","外包","We outsource our customer service."],["leverage","v.","善用；借力","Leverage your strengths."],["scalability","n.","可擴展性","Scalability is key for a startup."],["due diligence","n.","盡職調查","Do your due diligence before investing."]]},
+{"id":"c1_verb","name":"高級動詞","tag":"動詞","level":"C1","words":[["advocate","v.","提倡；擁護","She advocates for animal rights."],["allocate","v.","分配","We allocated more money to training."],["compensate","v.","補償","The airline will compensate you."],["deteriorate","v.","惡化","His health deteriorated quickly."],["facilitate","v.","促進；使容易","Technology facilitates learning."],["mitigate","v.","減輕；緩和","We must mitigate the risks."],["scrutinize","v.","仔細檢查","The report was scrutinized by experts."],["consolidate","v.","整合；鞏固","Let's consolidate the two lists."],["articulate","v.","清楚表達","She articulated her ideas well."],["accommodate","v.","容納；配合","The hall can accommodate 500 people."],["alleviate","v.","緩解","This medicine alleviates pain."],["endorse","v.","背書；公開支持","The plan was endorsed by the board."]]},
+{"id":"c1_adj","name":"高級形容詞","tag":"描述","level":"C1","words":[["comprehensive","adj.","全面的","We need a comprehensive plan."],["coherent","adj.","有條理的；連貫的","Your essay is clear and coherent."],["explicit","adj.","明確的","The instructions were explicit."],["feasible","adj.","可行的","Is this plan feasible?"],["meticulous","adj.","一絲不苟的","She is meticulous about details."],["pragmatic","adj.","務實的","We need a pragmatic solution."],["prevalent","adj.","普遍的","Smartphones are prevalent among teens."],["profound","adj.","深遠的；深刻的","The book had a profound effect on me."],["redundant","adj.","多餘的","Remove redundant words."],["robust","adj.","強健的；穩固的","The system is robust and reliable."],["subtle","adj.","細微的；微妙的","There is a subtle difference."],["tentative","adj.","暫定的","We made a tentative plan for Friday."]]},
+{"id":"c2_word","name":"精通字彙","tag":"描述","level":"C2","words":[["ubiquitous","adj.","無所不在的","Smartphones are now ubiquitous."],["ephemeral","adj.","短暫的","Fame on social media is ephemeral."],["quintessential","adj.","典型的；精髓的","It's the quintessential Taiwanese breakfast."],["pervasive","adj.","遍布的；滲透的","The smell was pervasive."],["esoteric","adj.","深奧難懂的","The lecture was too esoteric for me."],["idiosyncratic","adj.","獨特的；怪癖的","He has an idiosyncratic style."],["magnanimous","adj.","寬宏大量的","She was magnanimous in victory."],["candid","adj.","坦率的","Thank you for your candid feedback."],["eloquent","adj.","有口才的","He gave an eloquent speech."],["intricate","adj.","錯綜複雜的","The pattern is very intricate."],["paradigm","n.","典範；範式","This is a paradigm shift in education."],["conundrum","n.","難題","It's a real conundrum."]]},
+{"id":"c2_verb","name":"精通動詞","tag":"動詞","level":"C2","words":[["exacerbate","v.","使惡化","Stress can exacerbate the problem."],["ameliorate","v.","改善","New laws helped ameliorate poverty."],["obfuscate","v.","使模糊難懂","Don't obfuscate the facts."],["juxtapose","v.","並列對照","The artist juxtaposes old and new."],["circumvent","v.","規避","They tried to circumvent the rules."],["corroborate","v.","證實","Witnesses corroborated his story."],["delineate","v.","清楚描述；劃定","The contract delineates each role."],["galvanize","v.","激勵；促使行動","The speech galvanized the team."],["relinquish","v.","放棄；交出","He relinquished control of the company."],["substantiate","v.","證實；提出證據","Can you substantiate that claim?"],["undermine","v.","削弱；暗中破壞","Rumors can undermine trust."],["reconcile","v.","調和；和解","It's hard to reconcile work and family."]]},
+{"id":"c2_idiom","name":"道地慣用語","tag":"片語","level":"C2","words":[["the elephant in the room","phr.","大家避而不談的問題","Let's talk about the elephant in the room."],["a blessing in disguise","phr.","因禍得福","Losing that job was a blessing in disguise."],["bite the bullet","phr.","咬牙面對","I bit the bullet and saw the dentist."],["beat around the bush","phr.","拐彎抹角","Stop beating around the bush."],["cut corners","phr.","偷工減料","Don't cut corners on safety."],["the ball is in your court","phr.","該你做決定了","I've made my offer. The ball is in your court."],["read between the lines","phr.","讀出言外之意","You have to read between the lines."],["go the extra mile","phr.","多付出一點","She always goes the extra mile."],["a double-edged sword","phr.","雙面刃","Social media is a double-edged sword."],["jump on the bandwagon","phr.","跟風","Everyone jumped on the bandwagon."],["back to square one","phr.","回到原點","The plan failed. We're back to square one."],["once in a blue moon","phr.","極少；難得一次","I eat fast food once in a blue moon."]]}
+];
+
+// ---------- state ----------
+const KEY="vocab-planet-v1";
+let S={prog:{},days:[],custom:[]};
+try{const raw=localStorage.getItem(KEY);if(raw)S=Object.assign(S,JSON.parse(raw))}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+function markToday(){const t=todayStr();if(!S.days.includes(t)){S.days.push(t);save()}renderStreak()}
+function streak(){let n=0;const d=new Date();if(!S.days.includes(todayStr()))d.setDate(d.getDate()-1);
+  for(;;){const s=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");if(S.days.includes(s)){n++;d.setDate(d.getDate()-1)}else break}return n}
+function renderStreak(){document.getElementById("streakN").textContent=streak()}
+
+function allSets(){
+  const sets=BUILTIN.map(s=>({...s,level:s.level||"A1",words:s.words.map(w=>({en:w[0],pos:w[1],zh:w[2],ex:w[3],id:s.id+":"+w[0]}))}));
+  sets.push({id:"custom",name:"我的單字",tag:"自訂",level:"自訂",words:S.custom.map(w=>({...w,id:"custom:"+w.en}))});
+  return sets}
+const getSet=id=>allSets().find(s=>s.id===id);
+const LEVELS=["A1","A2","B1","B2","C1","C2"];
+const LVINFO={A1:["英檢入門","國小","最基本的字：數字、顏色、家人、打招呼。"],A2:["英檢初級","國中・會考","日常簡單對話：購物、問路、點餐、看病。"],
+  B1:["英檢中級","高中・學測","旅行、工作、學習的一般情境都能應付。"],B2:["英檢中高級","大學・多益","讀新聞、開會、寫商務信，用片語自然表達。"],
+  C1:["英檢高級","職場專業","金融、法律、醫療、管理等專業場合用字。"],C2:["英檢優級","精通","接近母語人士的精準用字和道地慣用語。"]};
+if(!LEVELS.includes(S.level)&&S.level!=="全部")S.level="A1";
+const lvSets=()=>allSets().filter(s=>S.level==="全部"||s.level===S.level||s.id==="custom");
+const lvName=()=>S.level==="全部"?"全部":S.level;
+function lvBar(){const sets=allSets(),cnt=l=>sets.filter(s=>s.id!=="custom"&&(l==="全部"||s.level===l)).reduce((a,s)=>a+s.words.length,0);
+  return `<div class="lvwrap"><div class="lvbar">${LEVELS.map(l=>`<button class="lvb ${S.level===l?"on":""}" data-lv="${l}" aria-pressed="${S.level===l}"><b>${l}</b><span>${LVINFO[l][0]}</span><span>${LVINFO[l][1]}・${cnt(l)}字</span></button>`).join("")}</div>
+  <div class="lvfoot"><span class="muted">${S.level==="全部"?"顯示所有程度的單字。":LVINFO[S.level][2]}</span><button class="fchip ${S.level==="全部"?"on":""}" data-lv="全部">全部程度・${cnt("全部")}字</button></div></div>`}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-lv]");if(!b)return;S.level=b.dataset.lv;setTag="全部";save();render()});
+// spaced repetition: box 0-7, next review after IV[box] days
+const IV=[0,1,2,4,7,15,30,60];
+const dayStr=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const addDays=n=>{const d=new Date();d.setDate(d.getDate()+n);return dayStr(d)};
+if(!S.srs){S.srs={};for(const k in (S.prog||{})){const p=S.prog[k];if(p>0)S.srs[k]={b:p>=3?4:p,d:todayStr()}}}
+if(!S.gram)S.gram={};
+const box=w=>(S.srs[w.id]||{}).b||0;
+const seen=w=>!!S.srs[w.id];
+const isDue=w=>!!S.srs[w.id]&&S.srs[w.id].d<=todayStr();
+const lv=w=>{const b=box(w);return b>=5?3:b>=3?2:b>=1?1:0};
+const mastered=ws=>ws.filter(w=>box(w)>=4).length;
+function dayState(){if(!S.day||S.day.d!==todayStr())S.day={d:todayStr(),newN:0,revN:0,gram:0,talk:0};return S.day}
+function bump(w,ok){const ds=dayState(),r=S.srs[w.id],due=!r||r.d<=todayStr();
+  if(!r)ds.newN++;else if(due)ds.revN++;
+  let b=r?r.b:0;
+  if(ok){if(due)b=Math.min(IV.length-1,b+1)}else b=Math.max(0,b-2);
+  S.srs[w.id]={b,d:ok?addDays(IV[b]):addDays(b?1:0)};save()}
+
+// ---------- speech ----------
+function speak(t){try{const u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=.9;const vv=enVoice();if(vv)u.voice=vv;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){toast("此瀏覽器不支援發音")}}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+function toast(m){const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),1600)}
+
+// ---------- router ----------
+const app=document.getElementById("app");
+let view={name:"home"};
+function go(v){if(D)stopDrive();if(P)stopP();view=v;render();window.scrollTo(0,0)}
+const TABS=[["home","首頁","home"],["sets","單字","book"],["grammar","文法","pen"],["talk","對話","chat"],["listen","聽力","ear"]];
+function renderTabs(){
+  const cur={set:"sets",flash:"sets",quiz:"sets",done:"sets",words:"sets",add:"sets",drive:"listen",lesson:"grammar",dialog:"talk",placement:"home"}[view.name]||view.name;
+  document.getElementById("tabs").innerHTML=TABS.map(([k,l,i])=>`<button class="tab ${cur===k?"on":""}" data-tab="${k}">${IC[i]}${l}</button>`).join("");
+}
+document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;
+  const k=b.dataset.tab;go({name:k==="listen"?"drive":k})});
+
+function render(){renderTabs();renderStreak();(V[view.name]||V.home)()}
+const V={};
+
+V.home=()=>{
+  const sets=lvSets(),all=sets.flatMap(s=>s.words),m=mastered(all),pct=all.length?Math.round(m/all.length*100):0;
+  const lbl=["日","一","二","三","四","五","六"],days=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const s=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    days.push(`<div class="day ${S.days.includes(s)?"on":""} ${i===0?"today":""}"><i>${S.days.includes(s)?"🔥":""}</i><span>週${lbl[d.getDay()]}</span></div>`)}
+  app.innerHTML=`${dailyPanel()}<a class="ptip" href="pronounce.html" style="text-decoration:none">${IC.target}<span>發音評分：念念看，系統會幫你打分數</span><b>›</b></a>
+  <section style="display:flex;flex-direction:column;gap:8px"><div class="row"><h2>選擇程度</h2><span class="muted" style="font-size:13px">測驗、翻卡、開車聽學都會跟著這個程度</span></div>${lvBar()}</section>
+  <section class="panel">
+    <div class="stats">
+      <div class="stat"><b style="color:var(--accent)">${all.length}</b><span>${lvName()}單字</span></div>
+      <div class="stat"><b style="color:var(--good)">${m}</b><span>已精通</span></div>
+      <div class="stat"><b style="color:var(--plum)">${pct}%</b><span>進度</span></div>
+    </div>
+    <div class="row" style="margin-top:16px"><h2>連續學習 ${streak()} 天</h2><span class="muted" style="font-size:13px">每天練一次就會點亮</span></div>
+    <div class="week">${days.join("")}</div>
+  </section>
+  <section style="display:flex;flex-direction:column;gap:10px">
+    <h2>快速開始</h2>
+    <div class="quick">
+      <button class="qbtn" data-q="placement"><span class="ic c-blue">${IC.target}</span>程度測驗</button>
+      <button class="qbtn" data-q="quiz"><span class="ic c-plum">${IC.bolt}</span>隨機測驗</button>
+      <button class="qbtn" data-q="flash"><span class="ic c-sun">${IC.cards}</span>翻卡複習</button>
+      <button class="qbtn" data-q="listen"><span class="ic c-good">${IC.ear}</span>聽寫練習</button>
+      <button class="qbtn wide" data-q="drive"><span class="ic c-blue">${IC.car}</span>開車聽學・免看螢幕自動播放</button>
+    </div>
+  </section>
+  <section style="display:flex;flex-direction:column;gap:10px">
+    <div class="row"><h2>單字集</h2><button class="back" data-q="sets" style="color:var(--accent)">全部 ›</button></div>
+    ${setCards(sets.slice(0,2))}
+  </section>`;
+  app.onclick=e=>{const q=e.target.closest("[data-q]");if(q){const k=q.dataset.q;
+      if(k==="daily")startDaily();else if(k==="placement"){PT=null;go({name:"placement"})}else if(k==="quiz")startQuiz("all");else if(k==="flash")startFlash("all");else if(k==="listen")startListen("all");else go({name:k});return}
+    const s=e.target.closest("[data-set]");if(s)go({name:"set",id:s.dataset.set})};
+};
+
+function setCards(sets){return `<div class="sets">${sets.map(s=>{const m=mastered(s.words),p=s.words.length?m/s.words.length*100:0;
+  return `<button class="set" data-set="${s.id}"><div class="row"><h3>${esc(s.name)}</h3><span class="chip">${S.level==="全部"&&s.id!=="custom"?esc(s.level)+"・":""}${esc(s.tag)}</span></div>
+  <span class="muted" style="font-size:13px">${s.words.length} 個單字・已學會 ${m}/${s.words.length}</span><div class="bar"><div style="width:${p}%"></div></div></button>`}).join("")}</div>`}
+
+let setTag="全部";
+V.sets=()=>{const sets=lvSets(),ORD=["基礎","生活","學校","描述","動詞","健康","旅行","職場","商務","社會","觀念","科技","金融","法律","片語","短句","自訂"],tags=["全部",...[...new Set(sets.map(s=>s.tag))].sort((x,y)=>(ORD.indexOf(x)+99)%99-(ORD.indexOf(y)+99)%99)];
+  sets.sort((x,y)=>ORD.indexOf(x.tag)-ORD.indexOf(y.tag));
+  const shown=setTag==="全部"?sets:sets.filter(s=>s.tag===setTag);
+  const total=shown.reduce((a,s)=>a+s.words.length,0);
+  app.innerHTML=`<div class="row"><h2>單字集</h2><span class="muted" style="font-size:13px">${shown.length} 組・${total} 個</span></div>
+  <div class="quick"><button class="qbtn" data-go="words"><span class="ic c-plum">${IC.grid}</span>搜尋單字</button><button class="qbtn" data-go="add"><span class="ic c-blue">${IC.plus}</span>新增單字</button></div>
+  ${lvBar()}<div class="chips">${tags.map(t=>`<button class="fchip ${t===setTag?"on":""}" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}</div>${setCards(shown)}`;
+  app.onclick=e=>{const gg=e.target.closest("[data-go]");if(gg)return go({name:gg.dataset.go});const t=e.target.closest("[data-tag]");if(t){setTag=t.dataset.tag;return render()}
+    const s=e.target.closest("[data-set]");if(s)go({name:"set",id:s.dataset.set})}};
+
+function wordRows(ws,del){return ws.length?`<div class="wlist">${ws.map(w=>`<div class="witem">
+  <button class="say" data-say="${esc(w.en)}" aria-label="發音 ${esc(w.en)}">${IC.spk}</button>
+  <div style="min-width:0"><div class="en">${esc(w.en)} <span class="pos">${esc(w.pos||"")}</span></div><div class="zh">${esc(w.zh)}</div></div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><div class="lv" title="熟練度">${[0,1,2].map(i=>`<i class="${lv(w)>i?"f":""}"></i>`).join("")}</div>
+  ${del?`<button class="del" data-del="${esc(w.en)}">刪除</button>`:""}</div></div>`).join("")}</div>`:`<p class="empty">還沒有單字，到「新增」加入第一個吧。</p>`}
+
+V.set=()=>{const s=getSet(view.id),m=mastered(s.words),p=s.words.length?Math.round(m/s.words.length*100):0,has=s.words.length>0;
+  app.innerHTML=`<button class="back" data-back>${IC.left}單字集</button>
+  <section class="panel" style="display:flex;flex-direction:column;gap:12px">
+    <div class="row"><h2 style="font-size:22px">${esc(s.name)}</h2><span class="chip">${s.id==="custom"?"自訂":esc(s.level)+"・"+esc(s.tag)}</span></div>
+    <div class="row muted" style="font-size:13px"><span>${s.words.length} 個單字</span><span style="color:var(--good);font-weight:700">已學會 ${m}/${s.words.length}（${p}%）</span></div>
+    <div class="bar"><div style="width:${p}%"></div></div>
+    <div class="modes">
+      <button class="mode c-sun" data-m="flash" ${has?"":"disabled"}>${IC.cards}翻卡</button>
+      <button class="mode c-plum" data-m="quiz" ${s.words.length>=4?"":"disabled"}>${IC.bolt}測驗</button>
+      <button class="mode c-good" data-m="listen" ${has?"":"disabled"}>${IC.ear}聽寫</button>
+      <button class="mode c-blue" data-m="drive" ${has?"":"disabled"}>${IC.car}開車聽</button>
+    </div>
+    ${s.id==="custom"&&s.words.length<4?'<p class="muted" style="font-size:13px;margin:0">測驗需要至少 4 個單字。</p>':""}
+  </section>
+  <section class="panel">${wordRows(s.words,s.id==="custom")}</section>`;
+  app.onclick=e=>{if(e.target.closest("[data-back]"))return go({name:"sets"});
+    const sy=e.target.closest("[data-say]");if(sy)return speak(sy.dataset.say);
+    const d=e.target.closest("[data-del]");if(d){S.custom=S.custom.filter(w=>w.en!==d.dataset.del);save();return render()}
+    const md=e.target.closest("[data-m]");if(md&&!md.disabled){const k=md.dataset.m;k==="drive"?go({name:"drive",set:s.id}):k==="flash"?startFlash(s.id):k==="quiz"?startQuiz(s.id):startListen(s.id)}}};
+
+V.words=()=>{const ws=lvSets().flatMap(s=>s.words);
+  app.innerHTML=`<div class="row"><h2>單字</h2><span class="muted" style="font-size:13px">${ws.length} 個</span></div>${lvBar()}<input id="q" type="search" placeholder="搜尋英文或中文…"><section class="panel" id="wl">${wordRows(ws)}</section>`;
+  const q=document.getElementById("q");q.oninput=()=>{const t=q.value.trim().toLowerCase();
+    document.getElementById("wl").innerHTML=wordRows(ws.filter(w=>w.en.toLowerCase().includes(t)||w.zh.includes(t)))};
+  app.onclick=e=>{const sy=e.target.closest("[data-say]");if(sy)speak(sy.dataset.say)}};
+
+V.add=()=>{app.innerHTML=`<h2>新增單字</h2>
+  <form class="panel" id="f" style="display:flex;flex-direction:column;gap:12px">
+    <div class="field"><label for="en">英文</label><input id="en" required autocomplete="off" autocapitalize="off" placeholder="例如 weekend"></div>
+    <div class="field"><label for="zh">中文意思</label><input id="zh" required autocomplete="off" placeholder="例如 週末"></div>
+    <div class="field"><label for="pos">詞性</label><select id="pos"><option>n.</option><option>v.</option><option>adj.</option><option>adv.</option><option>prep.</option><option>phr.</option></select></div>
+    <div class="field"><label for="ex">例句（選填）</label><input id="ex" autocomplete="off" placeholder="例如 I play ball on weekends."></div>
+    <button class="btn pri" type="submit">加入「我的單字」</button>
+  </form>
+  <section class="panel"><div class="row" style="margin-bottom:6px"><h2>我的單字</h2><span class="chip">${S.custom.length} 個</span></div>${wordRows(getSet("custom").words,true)}</section>`;
+  document.getElementById("f").onsubmit=e=>{e.preventDefault();const en=document.getElementById("en").value.trim(),zh=document.getElementById("zh").value.trim();
+    if(!en||!zh)return;if(S.custom.some(w=>w.en.toLowerCase()===en.toLowerCase()))return toast("這個單字已經加過了");
+    S.custom.push({en,zh,pos:document.getElementById("pos").value,ex:document.getElementById("ex").value.trim()});save();toast("已加入 "+en);render()};
+  app.onclick=e=>{const sy=e.target.closest("[data-say]");if(sy)return speak(sy.dataset.say);
+    const d=e.target.closest("[data-del]");if(d){S.custom=S.custom.filter(w=>w.en!==d.dataset.del);save();render()}}};
+
+// ---------- sessions ----------
+let run=null;
+function pool(id){const ws=(id==="all"?lvSets().flatMap(s=>s.words):getSet(id).words);
+  // weaker words first, cap at 10
+  return shuffle(ws).sort((a,b)=>lv(a)-lv(b)).slice(0,10)}
+function progBar(){return `<div class="prog"><button class="back" data-quit aria-label="結束">✕</button><div class="bar"><div style="width:${run.i/run.list.length*100}%;background:var(--accent)"></div></div><span>${run.i}/${run.list.length}</span></div>`}
+function quitBack(){return run.from==="all"||run.from==="daily"?{name:"home"}:{name:"set",id:run.from}}
+
+function startFlash(id){const l=pool(id);if(!l.length)return toast("這組還沒有單字");run={kind:"flash",from:id,list:l,i:0,ok:0};go({name:"flash"})}
+V.flash=()=>{if(run.i>=run.list.length)return finish();const w=run.list[run.i];
+  app.innerHTML=`${progBar()}
+  <div class="card-stage"><div class="flash" id="fc" role="button" tabindex="0" aria-label="點一下翻面">
+    <div class="face">${seen(w)?(isDue(w)?'<span class="chip">複習</span>':""):'<span class="chip newc">新字</span>'}<div class="big">${esc(w.en)}</div><div class="pos">${esc(w.pos||"")}</div><button class="say" data-say="${esc(w.en)}">${IC.spk}</button><span class="muted" style="font-size:13px">點卡片看答案</span></div>
+    <div class="face b"><div class="big" style="font-family:var(--body);font-size:32px">${esc(w.zh)}</div><div style="font-family:var(--display);font-weight:600">${esc(w.en)}</div>${w.ex?`<div class="ex">${esc(w.ex)}</div>`:""}</div>
+  </div></div>
+  <div class="btns"><button class="btn no" data-r="0">還不熟</button><button class="btn ok" data-r="1">記得了</button></div>`;
+  const fc=document.getElementById("fc");fc.onkeydown=e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();fc.classList.toggle("flip")}};
+  app.onclick=e=>{if(e.target.closest("[data-quit]"))return go(quitBack());
+    const sy=e.target.closest("[data-say]");if(sy){e.stopPropagation();return speak(sy.dataset.say)}
+    if(e.target.closest("#fc"))return fc.classList.toggle("flip");
+    const r=e.target.closest("[data-r]");if(r){const ok=r.dataset.r==="1";bump(w,ok);if(ok)run.ok++;run.i++;render()}};
+  speak(w.en)};
+
+function startQuiz(id){const l=pool(id);const all=(id==="all"?lvSets():allSets()).flatMap(s=>s.words);if(all.length<4)return toast("單字不夠");run={kind:"quiz",from:id,list:l,i:0,ok:0,all};go({name:"quiz"})}
+V.quiz=()=>{if(run.i>=run.list.length)return finish();const w=run.list[run.i];
+  const enToZh=Math.random()<.5;
+  const others=shuffle(run.all.filter(x=>x.id!==w.id&&x.zh!==w.zh)).slice(0,3);
+  const opts=shuffle([w,...others]);
+  app.innerHTML=`${progBar()}
+  <section class="panel" style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center;padding:28px 16px">
+    <span class="muted" style="font-size:13px">${enToZh?"選出正確的中文意思":"選出正確的英文單字"}</span>
+    <div class="big" style="${enToZh?"":"font-family:var(--body);font-size:32px"}">${esc(enToZh?w.en:w.zh)}</div>
+    ${qtools(enToZh?w.en:w.zh,opts.map(o=>enToZh?o.zh:o.en))}
+  </section>
+  <div class="opts">${opts.map(o=>`<button class="opt" data-o="${esc(o.id)}">${esc(enToZh?o.zh:o.en)}</button>`).join("")}</div>
+  <div class="fb" id="fb"></div>`;
+  let answered=false;
+  app.onclick=e=>{if(e.target.closest("[data-quit]"))return go(quitBack());
+    const sy=e.target.closest("[data-say]");if(sy)return speak(sy.dataset.say);
+    const o=e.target.closest("[data-o]");if(!o||answered)return;answered=true;
+    const ok=o.dataset.o===w.id;bump(w,ok);if(ok)run.ok++;
+    app.querySelectorAll("[data-o]").forEach(b=>{if(b.dataset.o===w.id)b.classList.add("right");else if(b===o)b.classList.add("wrong")});
+    const fb=document.getElementById("fb");fb.className="fb "+(ok?"good":"bad");fb.textContent=ok?"答對了！":`正確答案：${w.en} ＝ ${w.zh}`;
+    speak(w.en);setTimeout(()=>{run.i++;render()},ok?900:1800)};
+  if(S.autoRead!==false)setTimeout(()=>readQ(enToZh?w.en:w.zh),250)};
+
+function startListen(id){const l=pool(id).filter(w=>!/[ ?!.]/.test(w.en));if(!l.length)return toast("這組是短句，請用翻卡或測驗練習");run={kind:"listen",from:id,list:l,i:0,ok:0};go({name:"listen"})}
+V.listen=()=>{if(!run||run.kind!=="listen")return startListen("all");if(run.i>=run.list.length)return finish();const w=run.list[run.i];
+  app.innerHTML=`${progBar()}
+  <section class="panel" style="text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;padding:28px 16px">
+    <span class="muted" style="font-size:13px">聽發音，拼出英文單字</span>
+    <button class="say" data-say="${esc(w.en)}" style="width:76px;height:76px" aria-label="再聽一次">${IC.spk.replace('<svg ','<svg style="width:36px;height:36px" ')}</button>
+    <span class="muted" style="font-size:13px">提示：${esc(w.zh)}（${w.en.length} 個字母）</span>
+  </section>
+  <form id="lf" style="display:flex;flex-direction:column;gap:10px">
+    <input id="sp" class="spell" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="輸入你聽到的單字">
+    <div class="fb" id="fb"></div>
+    <div class="btns"><button type="button" class="btn ghost" data-skip>不會，跳過</button><button class="btn pri" type="submit">確認</button></div>
+  </form>`;
+  let answered=false;
+  const next=(ok)=>{if(answered)return;answered=true;bump(w,ok);if(ok)run.ok++;
+    const fb=document.getElementById("fb");fb.className="fb "+(ok?"good":"bad");fb.textContent=ok?"拼對了！":`正確拼法：${w.en}`;
+    setTimeout(()=>{run.i++;render()},ok?900:1800)};
+  document.getElementById("lf").onsubmit=e=>{e.preventDefault();const v=document.getElementById("sp").value.trim().toLowerCase();if(!v)return;next(v===w.en.toLowerCase())};
+  app.onclick=e=>{if(e.target.closest("[data-quit]"))return go(quitBack());
+    if(e.target.closest("[data-skip]"))return next(false);
+    const sy=e.target.closest("[data-say]");if(sy)speak(sy.dataset.say)};
+  setTimeout(()=>speak(w.en),250)};
+
+function finish(){markToday();const n=run.list.length,ok=run.ok;
+  app.innerHTML=`<section class="panel done" style="padding:32px 16px">
+    <span style="font-size:46px" aria-hidden="true">${ok/n>=.8?"🎉":ok/n>=.5?"👍":"💪"}</span>
+    <div class="big">${ok}/${n}</div>
+    <h2>${ok/n>=.8?"太厲害了！":ok/n>=.5?"不錯喔，繼續加油":"多練幾次就會記住"}</h2>
+    <p class="muted" style="margin:0">今天的連續天數已點亮，目前 ${streak()} 天 🔥</p>
+  </section>
+  <div class="btns"><button class="btn ghost" data-home>回去</button><button class="btn pri" data-again>再練一輪</button></div>`;
+  view={name:"done"};renderTabs();
+  const k=run.kind,from=run.from;
+  app.onclick=e=>{if(e.target.closest("[data-home]"))return go(from==="all"||from==="daily"?{name:"home"}:{name:"set",id:from});
+    if(e.target.closest("[data-again]"))from==="daily"?startDaily():k==="flash"?startFlash(from):k==="quiz"?startQuiz(from):startListen(from)}}
+
+// ---------- drive mode ----------
+Object.assign(IC,{
+car:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3v-5l2-5h14l2 5v5h-2"/><path d="M3 12h18"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M9.5 17h5"/></svg>',
+play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>',
+pause:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4.5" height="14" rx="1"/><rect x="13.5" y="5" width="4.5" height="14" rx="1"/></svg>',
+prev:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 6.2v11.6a.8.8 0 0 1-1.2.7L9 13.2v4.3a1 1 0 0 1-2 0v-11a1 1 0 0 1 2 0v4.3l7.8-5.3a.8.8 0 0 1 1.2.7z"/></svg>',
+next:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6.2v11.6a.8.8 0 0 0 1.2.7l7.8-5.3v4.3a1 1 0 0 0 2 0v-11a1 1 0 0 0-2 0v4.3L7.2 5.5A.8.8 0 0 0 6 6.2z"/></svg>'});
+let D=null,wake=null;
+const dcfg=()=>Object.assign({set:"all",rand:false,slow:false,rep:true,ex:true,shadow:false},S.drive||{});
+async function getWake(){try{wake=await navigator.wakeLock.request("screen")}catch(e){}}
+function releaseWake(){try{wake&&wake.release()}catch(e){}wake=null}
+document.addEventListener("visibilitychange",()=>{if(D&&D.playing&&document.visibilityState==="visible")getWake()});
+function stopDrive(){if(!D)return;D.tok++;D=null;try{speechSynthesis.cancel()}catch(e){}releaseWake()}
+function say(text,lang,rate,voice){return new Promise(res=>{let done=false;const fin=()=>{if(!done){done=true;res()}};
+  try{const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=rate;const vv=voice||(/^zh/i.test(lang)?zhVoice():enVoice());if(vv)u.voice=vv;u.onend=fin;u.onerror=fin;speechSynthesis.speak(u)}catch(e){fin()}
+  setTimeout(fin,2500+text.length*160/rate)})}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function setStep(t){const el=document.getElementById("dstep");if(el)el.textContent=t}
+async function playLoop(){
+  const tok=++D.tok,c=D.cfg,r=c.slow?.7:.95,ok=()=>D&&D.tok===tok&&D.playing;
+  try{speechSynthesis.cancel()}catch(e){}
+  while(ok()){
+    const w=D.list[D.i];render();
+    setStep("英文");await say(w.en,"en-US",r);if(!ok())return;await wait(700);if(!ok())return;
+    if(c.rep){setStep("再聽一次");await say(w.en,"en-US",Math.max(.7,r*.85));if(!ok())return;await wait(600);if(!ok())return}
+    if(c.shadow){setStep("換你跟著念");await wait(1000+w.en.length*90);if(!ok())return}
+    setStep("中文");await say(w.zh,"zh-TW",1);if(!ok())return;await wait(700);if(!ok())return;
+    if(c.ex&&w.ex){setStep("例句");await say(w.ex,"en-US",r);if(!ok())return;await wait(600);if(!ok())return}
+    setStep("");await wait(1300);if(!ok())return;
+    D.heard++;if(D.heard===10)markToday();
+    D.i++;
+    if(D.i>=D.list.length){D.i=0;if(c.rand)D.list=shuffle(D.list);setStep("這一輪聽完了");await say("這一輪聽完了，再從頭開始。","zh-TW",1);if(!ok())return;await wait(800)}
+  }}
+function driveCtl(a){if(!D)return;const n=D.list.length;
+  if(a==="toggle"){D.playing=!D.playing;if(D.playing){getWake();playLoop()}else{D.tok++;try{speechSynthesis.cancel()}catch(e){}render()}return}
+  if(a==="next")D.i=(D.i+1)%n;if(a==="prev")D.i=(D.i-1+n)%n;
+  if(D.playing)playLoop();else render()}
+function driveList(key){const sets=lvSets();
+  if(key==="all")return{name:lvName()+"單字",list:sets.flatMap(s=>s.words)};
+  if(key.startsWith("tag:")){const t=key.slice(4);return{name:t,list:sets.filter(s=>s.tag===t).flatMap(s=>s.words)}}
+  const st=sets.find(s=>s.id===key);return st?{name:st.name,list:st.words}:{name:"全部單字",list:sets.flatMap(s=>s.words)}}
+V.drive=()=>{
+  if(D){const w=D.list[D.i];
+    app.innerHTML=`<section class="drive" aria-live="polite">
+      <div class="dtop"><span>${esc(D.name)}</span><span>${D.i+1} / ${D.list.length}</span></div>
+      <div style="display:flex;flex-direction:column;gap:10px"><div class="dstep" id="dstep"></div>
+        <div class="dword">${esc(w.en)}</div><div class="dzh">${esc(w.zh)}</div><div class="dex">${D.cfg.ex&&w.ex?esc(w.ex):""}</div></div>
+      <div class="dctl"><button data-d="prev" aria-label="上一個">${IC.prev}</button>
+        <button data-d="toggle" class="dplay" aria-label="${D.playing?"暫停":"播放"}">${D.playing?IC.pause:IC.play}</button>
+        <button data-d="next" aria-label="下一個">${IC.next}</button></div>
+      <button class="dstop" data-d="stop">結束聽學</button></section>`;
+    app.onclick=e=>{const b=e.target.closest("[data-d]");if(!b)return;if(b.dataset.d==="stop"){stopDrive();return render()}driveCtl(b.dataset.d)};
+    return}
+  const c=dcfg();if(view.set)c.set=view.set;
+  const sets=lvSets().filter(s=>s.words.length),tags=[...new Set(sets.map(s=>s.tag))];
+  const all=sets.reduce((a,s)=>a+s.words.length,0);
+  const opt=(v,l)=>`<option value="${esc(v)}" ${c.set===v?"selected":""}>${esc(l)}</option>`;
+  app.innerHTML=`<h2>開車聽學</h2>${lvBar()}
+  <p class="muted" style="margin:0">按一次開始就會自動一直播：英文 → 再念一次 → 中文 → 例句，接著下一個字。適合開車、通勤、做家事時聽。</p>
+  <section class="panel" style="display:flex;flex-direction:column;gap:4px">
+    <div class="field" style="padding-bottom:10px"><label for="dset">要聽哪些單字</label>
+      <select id="dset">${opt("all",`${S.level==="全部"?"全部":"全部"+S.level}（${all} 個）`)}
+      ${tags.map(t=>`<optgroup label="${esc(t)}">${opt("tag:"+t,`整個「${t}」（${sets.filter(s=>s.tag===t).reduce((a,s)=>a+s.words.length,0)} 個）`)}${sets.filter(s=>s.tag===t).map(s=>opt(s.id,`${s.name}（${s.words.length}）`)).join("")}</optgroup>`).join("")}</select></div>
+    <label class="tgl" for="drep">英文念兩次<input type="checkbox" id="drep" ${c.rep?"checked":""}></label>
+    <label class="tgl" for="dex">念例句<input type="checkbox" id="dex" ${c.ex?"checked":""}></label>
+    <label class="tgl" for="dslow">放慢語速<input type="checkbox" id="dslow" ${c.slow?"checked":""}></label>
+    <label class="tgl" for="drand">隨機順序<input type="checkbox" id="drand" ${c.rand?"checked":""}></label>
+    <label class="tgl" for="dsh">跟讀停頓（念完英文留時間讓你跟著說）<input type="checkbox" id="dsh" ${c.shadow?"checked":""}></label>
+    <button class="btn pri" id="dgo" style="margin-top:8px;font-size:18px;padding:16px">開始播放</button>
+  </section>
+  ${voicePicker()}
+  <p class="note">請在出發前設定好並按下開始，行駛中不要操作手機。播放時要停留在這個頁面，螢幕會自動保持亮著；切到別的 App 或鎖定螢幕，聲音可能會停。</p>
+  <button class="btn ghost" data-dict>改做聽寫練習（要打字，別在開車時用）</button>`;
+  app.onclick=e=>{
+    if(e.target.closest("[data-dict]"))return startListen(view.set||"all");
+    if(!e.target.closest("#dgo"))return;
+    const cfg={set:document.getElementById("dset").value,rep:document.getElementById("drep").checked,ex:document.getElementById("dex").checked,
+      slow:document.getElementById("dslow").checked,rand:document.getElementById("drand").checked,shadow:document.getElementById("dsh").checked};
+    S.drive=cfg;save();const {name,list}=driveList(cfg.set);if(!list.length)return toast("這個範圍沒有單字");
+    D={cfg,name,list:cfg.rand?shuffle(list):list.slice(),i:0,tok:0,playing:true,heard:0};
+    getWake();window.scrollTo(0,0);playLoop()}};
+
+// ---------- grammar lessons ----------
+// {id,level,title,sum,pts:[...],f:[[label,pattern]],ex:[[en,zh]],q:[[question,[opts],answerIndex,why]]}
+const GRAMMAR=[
+{id:"g_be",level:"A1",title:"be 動詞 am / is / are",sum:"「是、在」的說法，英文最先要會的動詞。",
+ pts:["I 搭配 am；he、she、it 和單數名詞搭配 is；you、we、they 和複數名詞搭配 are。","否定句在 be 動詞後面加 not：isn't、aren't（am not 沒有縮寫）。","問句把 be 動詞移到句首，回答用 Yes, I am. / No, she isn't."],
+ f:[["肯定","主詞 + am / is / are + …"],["否定","主詞 + am / is / are + not + …"],["問句","Am / Is / Are + 主詞 + …?"]],
+ ex:[["I am a student.","我是學生。"],["She is my sister.","她是我的姊姊。"],["They are at school.","他們在學校。"],["Is he your teacher? — Yes, he is.","他是你的老師嗎？——是的。"]],
+ q:[["My parents ___ teachers.",["is","are","am"],1,"parents 是複數，用 are。"],["___ you hungry?",["Is","Am","Are"],2,"主詞 you 搭配 are。"],["It ___ not cold today.",["is","are","am"],0,"it 搭配 is。"],["I ___ twelve years old.",["am","is","are"],0,"I 只能搭配 am。"]]},
+{id:"g_pron",level:"A1",title:"人稱代名詞與所有格",sum:"我、我的、給我，分別怎麼說。",
+ pts:["主格當主詞，放在動詞前面：I、he、they。","受格放在動詞或介系詞後面：me、him、them。","所有格放在名詞前面，表示「誰的」：my、his、their。","its 是「它的」，it's 是 it is 的縮寫，不要搞混。"],
+ f:[["我","I ・ me ・ my"],["你","you ・ you ・ your"],["他／她","he ・ him ・ his ／ she ・ her ・ her"],["它","it ・ it ・ its"],["我們／他們","we ・ us ・ our ／ they ・ them ・ their"]],
+ ex:[["This is my book.","這是我的書。"],["Please give it to me.","請把它給我。"],["Her name is Amy.","她的名字是 Amy。"],["I like them very much.","我很喜歡他們。"]],
+ q:[["This is ___ pen.",["I","me","my"],2,"放在名詞 pen 前面，用所有格 my。"],["Can you help ___?",["we","us","our"],1,"放在動詞 help 後面，用受格 us。"],["___ is my brother.",["He","Him","His"],0,"當主詞用主格 He。"],["The dog wags ___ tail.",["it's","its","it"],1,"「牠的」尾巴用所有格 its；it's 是 it is。"]]},
+{id:"g_simple",level:"A1",title:"現在簡單式",sum:"說習慣、常做的事和不變的事實。",
+ pts:["常搭配 every day、usually、always 等表示習慣的字。","主詞是 he、she、it 或單數名詞時，動詞加 s 或 es（goes、watches、studies）。","否定句用 don't / doesn't + 原形動詞；問句用 Do / Does 開頭。"],
+ f:[["肯定","I / you / we / they + 原形；he / she / it + 動詞-s"],["否定","主詞 + don't / doesn't + 原形"],["問句","Do / Does + 主詞 + 原形 + …?"]],
+ ex:[["I drink milk every day.","我每天喝牛奶。"],["He plays basketball after school.","他放學後打籃球。"],["She doesn't like coffee.","她不喜歡咖啡。"],["Do you speak English?","你會說英文嗎？"]],
+ q:[["My brother ___ to school by bus.",["go","goes","going"],1,"主詞 my brother 是第三人稱單數，動詞加 es。"],["She ___ eat meat.",["don't","doesn't","isn't"],1,"she 的否定用 doesn't + 原形。"],["___ they live in Tainan?",["Do","Does","Are"],0,"they 的問句用 Do。"],["The sun ___ in the east.",["rise","rises","rising"],1,"不變的事實用現在簡單式，sun 是單數加 s。"]]},
+{id:"g_can",level:"A1",title:"can 表示能力",sum:"說會做或不會做的事。",
+ pts:["can 後面一定接原形動詞，主詞是誰都一樣（he can swim，不是 he can swims）。","否定是 can't（cannot）。","問句把 can 移到句首：Can you…?"],
+ f:[["肯定","主詞 + can + 原形"],["否定","主詞 + can't + 原形"],["問句","Can + 主詞 + 原形 + …?"]],
+ ex:[["I can swim.","我會游泳。"],["He can't drive.","他不會開車。"],["Can you help me?","你可以幫我嗎？"],["Birds can fly.","鳥會飛。"]],
+ q:[["She can ___ the piano.",["play","plays","playing"],0,"can 後面接原形 play。"],["I ___ swim. I never learned.",["can","can't","am"],1,"從沒學過，所以是不會：can't。"],["Can he ___ a bike?",["ride","rides","rode"],0,"can 後面接原形。"],["Can you open the window? — Yes, I ___.",["can","do","am"],0,"用 can 問，就用 can 回答。"]]},
+{id:"g_there",level:"A1",title:"There is / There are",sum:"說某個地方「有」什麼。",
+ pts:["後面接單數或不可數名詞用 There is；接複數名詞用 There are。","否定加 not：There isn't / There aren't。","問句：Is there…? / Are there…?"],
+ f:[["單數／不可數","There is + a / an / 不可數名詞 + 地點"],["複數","There are + 複數名詞 + 地點"],["問句","Is there…? ／ Are there…?"]],
+ ex:[["There is a cat on the bed.","床上有一隻貓。"],["There are three books on the desk.","書桌上有三本書。"],["Is there a bank near here?","這附近有銀行嗎？"],["There isn't any milk in the fridge.","冰箱裡沒有牛奶。"]],
+ q:[["There ___ two apples in the box.",["is","are","be"],1,"two apples 是複數，用 are。"],["There ___ some water in the bottle.",["is","are","am"],0,"water 不可數，用 is。"],["___ there a park near your home?",["Are","Is","Do"],1,"a park 是單數，問句用 Is there。"],["There ___ many people at the night market.",["is","are","has"],1,"people 是複數，用 are。"]]},
+
+{id:"g_past",level:"A2",title:"過去簡單式",sum:"說已經發生、已經結束的事。",
+ pts:["常搭配 yesterday、last week、ago、in 2020 等過去時間。","規則動詞加 -ed（played、visited）；不規則動詞要背（go→went、eat→ate、see→saw、buy→bought）。","否定用 didn't + 原形；問句用 Did + 主詞 + 原形。"],
+ f:[["肯定","主詞 + 過去式動詞"],["否定","主詞 + didn't + 原形"],["問句","Did + 主詞 + 原形 + …?"]],
+ ex:[["I visited my grandma yesterday.","我昨天去看奶奶。"],["We went to Kenting last summer.","我們去年夏天去了墾丁。"],["She didn't watch TV last night.","她昨晚沒看電視。"],["Did you finish your homework?","你功課寫完了嗎？"]],
+ q:[["I ___ a movie last night.",["watch","watched","watching"],1,"last night 是過去，用過去式。"],["He ___ to Japan in 2024.",["go","goes","went"],2,"go 的過去式是 went。"],["She didn't ___ breakfast.",["eat","ate","eats"],0,"didn't 後面接原形。"],["___ you see Tom yesterday?",["Do","Did","Were"],1,"過去的問句用 Did。"]]},
+{id:"g_prog",level:"A2",title:"現在進行式",sum:"說「現在正在做」的事。",
+ pts:["結構是 am / is / are + 動詞-ing。","常搭配 now、right now、Look!、Listen!。","像 like、know、want 這類表示狀態的動詞通常不用進行式。"],
+ f:[["肯定","主詞 + am / is / are + V-ing"],["否定","主詞 + am / is / are + not + V-ing"],["問句","Am / Is / Are + 主詞 + V-ing?"]],
+ ex:[["I am reading a book.","我正在看書。"],["They are playing basketball now.","他們現在正在打籃球。"],["Is she sleeping?","她在睡覺嗎？"],["We aren't watching TV.","我們沒有在看電視。"]],
+ q:[["Look! The baby ___.",["sleep","is sleeping","sleeps"],1,"Look! 表示眼前正在發生，用進行式。"],["What ___ you doing?",["is","are","do"],1,"you 搭配 are。"],["He ___ working now. He's at home.",["isn't","doesn't","don't"],0,"進行式的否定是 be 動詞 + not。"],["Listen! Someone ___ at the door.",["knocks","is knocking","knock"],1,"Listen! 表示正在發生。"]]},
+{id:"g_future",level:"A2",title:"未來式 will / be going to",sum:"說以後要做的事和預測。",
+ pts:["will + 原形：當下臨時決定、承諾、一般預測。","be going to + 原形：事先計畫好的事，或眼前有跡象的預測。","否定：won't（will not）、am not going to。"],
+ f:[["will","主詞 + will + 原形"],["be going to","主詞 + am / is / are + going to + 原形"]],
+ ex:[["I will call you later.","我晚點打給你。"],["It will rain tomorrow.","明天會下雨。"],["We are going to visit Japan next month.","我們下個月要去日本。"],["Are you going to buy a car?","你打算買車嗎？"]],
+ q:[["The phone is ringing. — I ___ get it.",["will","am going to","going"],0,"電話響了才決定去接，是臨時決定，用 will。"],["We ___ to have a party on Saturday. We already invited everyone.",["will","are going","going"],1,"已經邀請好了，是事先計畫，用 be going to。"],["She ___ be 20 next year.",["will","is going","is"],0,"單純的未來事實用 will。"],["Look at those clouds. It ___ rain.",["is going to","going to","will to"],0,"看得到烏雲，有跡象的預測用 be going to。"]]},
+{id:"g_compare",level:"A2",title:"比較級與最高級",sum:"比較兩樣東西，或說「最」怎樣。",
+ pts:["短的形容詞加 -er / -est（tall→taller→tallest）。","長的形容詞前面加 more / most（more interesting）。","不規則：good→better→best、bad→worse→worst。","比較級後面接 than；最高級前面加 the。"],
+ f:[["比較級","A + be + 形容詞-er / more 形容詞 + than + B"],["最高級","the + 形容詞-est / most 形容詞 + 範圍"]],
+ ex:[["Tom is taller than Ben.","Tom 比 Ben 高。"],["This book is more interesting than that one.","這本書比那本有趣。"],["He is the best player on the team.","他是隊上最好的球員。"],["Taipei 101 is one of the tallest buildings in Taiwan.","台北 101 是台灣最高的大樓之一。"]],
+ q:[["My bag is ___ than yours.",["heavy","heavier","heaviest"],1,"有 than，用比較級。heavy 字尾 y 改 i 加 er。"],["Today is the ___ day of my life.",["happier","happiest","most happy"],1,"the … of my life 用最高級 happiest。"],["Math is ___ difficult than English for me.",["more","most","much"],0,"difficult 是長字，比較級用 more。"],["Her English is ___ than mine.",["good","better","best"],1,"good 的比較級是 better。"]]},
+{id:"g_count",level:"A2",title:"可數與不可數名詞",sum:"many 還是 much？some 還是 any？",
+ pts:["可數名詞有單複數，可以用 a / an、many、a few。","不可數名詞（water、money、time、information）沒有複數，用 much、a little。","some 用在肯定句和請求；any 用在否定句和問句。"],
+ f:[["可數","many / a few / a lot of + 複數名詞"],["不可數","much / a little / a lot of + 不可數名詞"]],
+ ex:[["I have a few friends in Tainan.","我在台南有幾個朋友。"],["We don't have much time.","我們時間不多。"],["Can I have some water?","可以給我一些水嗎？"],["Are there any eggs?","還有蛋嗎？"]],
+ q:[["How ___ money do you have?",["many","much","a few"],1,"money 不可數，用 much。"],["There are ___ students in the room.",["much","many","a little"],1,"students 可數複數，用 many。"],["I need ___ information.",["an","some","many"],1,"information 不可數，不能加 an 或 many。"],["Do you have ___ questions?",["some","any","much"],1,"一般問句用 any。"]]},
+
+{id:"g_perfect",level:"B1",title:"現在完成式",sum:"從過去延續到現在的事、人生經驗、剛完成的事。",
+ pts:["結構：have / has + 過去分詞（been、eaten、lived、finished）。","for + 一段時間（for five years）；since + 起點（since 2020）。","常搭配 ever、never、already、yet、just。","有明確過去時間（yesterday、last year）時要用過去式，不用完成式。"],
+ f:[["肯定","主詞 + have / has + p.p."],["否定","主詞 + haven't / hasn't + p.p."],["問句","Have / Has + 主詞 + p.p.?"]],
+ ex:[["I have been to Japan twice.","我去過日本兩次。"],["She has lived here for five years.","她住在這裡五年了。"],["Have you ever eaten stinky tofu?","你吃過臭豆腐嗎？"],["I haven't finished my report yet.","我的報告還沒寫完。"]],
+ q:[["I ___ in Tainan since 2020.",["live","lived","have lived"],2,"since 2020 從過去到現在，用現在完成式。"],["___ you ever seen snow?",["Did","Have","Has"],1,"ever 問經驗，用 Have。"],["He has worked here ___ ten years.",["since","for","ago"],1,"ten years 是一段時間，用 for。"],["She ___ already left.",["has","have","is"],0,"she 搭配 has。"]]},
+{id:"g_passive",level:"B1",title:"被動語態",sum:"重點放在「被做了什麼」，而不是誰做的。",
+ pts:["結構：be 動詞 + 過去分詞，be 動詞決定時態。","想說是誰做的，在後面加 by + 人。","常用在新聞、說明書、產品和歷史介紹。"],
+ f:[["現在","am / is / are + p.p."],["過去","was / were + p.p."],["未來","will be + p.p."]],
+ ex:[["English is spoken in many countries.","很多國家說英文。"],["The bridge was built in 1990.","這座橋建於 1990 年。"],["My bike was stolen last night.","我的腳踏車昨晚被偷了。"],["The report will be finished tomorrow.","報告明天會完成。"]],
+ q:[["This song ___ by a famous singer.",["wrote","was written","is writing"],1,"歌是被寫的，用被動 was written。"],["Rice ___ in Taiwan.",["grows","is grown","grown"],1,"稻米是被種植的，現在被動 is grown。"],["The meeting ___ canceled yesterday.",["is","was","were"],1,"yesterday 是過去，meeting 單數用 was。"],["The letters ___ sent tomorrow.",["will be","will","were"],0,"未來被動 will be + p.p.。"]]},
+{id:"g_relative",level:"B1",title:"關係代名詞 who / which / that",sum:"用一個子句補充說明前面的人或東西。",
+ pts:["指人用 who；指東西用 which；兩者都可以用 that。","表示「某人的」用 whose。","關係代名詞當受詞時常可省略：The book (that) I bought…"],
+ f:[["人","名詞 + who / that + 子句"],["物","名詞 + which / that + 子句"],["所有","名詞 + whose + 名詞 + …"]],
+ ex:[["The man who lives next door is a doctor.","住隔壁的那個男人是醫生。"],["This is the book which I bought yesterday.","這是我昨天買的書。"],["I have a friend whose father is a pilot.","我有個朋友的爸爸是機師。"],["The phone that I lost was new.","我弄丟的那支手機是新的。"]],
+ q:[["The girl ___ is singing is my sister.",["who","which","what"],0,"指人用 who。"],["I like the cake ___ my mom made.",["who","which","where"],1,"指東西用 which。"],["Do you know the man ___ car is red?",["who","whose","which"],1,"「他的」車，用 whose。"],["A dictionary is a book ___ explains words.",["who","that","what"],1,"指東西可以用 that。"]]},
+{id:"g_if",level:"B1",title:"條件句（第一類、第二類）",sum:"「如果…就…」：可能發生的事 vs. 不太可能的事。",
+ pts:["第一類：真的可能發生。If + 現在式，主要子句用 will + 原形。","第二類：與現在事實相反或不太可能。If + 過去式，主要子句用 would + 原形。","第二類的 be 動詞通常一律用 were：If I were you…"],
+ f:[["第一類","If + 現在式, 主詞 + will + 原形"],["第二類","If + 過去式, 主詞 + would + 原形"]],
+ ex:[["If it rains tomorrow, we will stay home.","如果明天下雨，我們就待在家。"],["If you study hard, you will pass.","如果你用功，你就會及格。"],["If I had more money, I would buy a car.","如果我有更多錢，我會買車。（但我沒有）"],["If I were you, I would take the job.","如果我是你，我會接下這份工作。"]],
+ q:[["If it ___ sunny tomorrow, we'll go to the beach.",["is","will be","was"],0,"第一類條件句，if 子句用現在式。"],["If I ___ a bird, I would fly to you.",["am","were","will be"],1,"與事實相反，用 were。"],["If he ___ harder, he would get better grades.",["studies","studied","will study"],1,"主要子句是 would，if 子句用過去式。"],["If you don't hurry, you ___ miss the bus.",["will","would","are"],0,"真的可能發生，用 will。"]]},
+{id:"g_gerund",level:"B1",title:"動名詞與不定詞",sum:"動詞後面該接 V-ing 還是 to V？",
+ pts:["接 V-ing 的動詞：enjoy、finish、mind、avoid、keep、practice。","接 to V 的動詞：want、decide、hope、plan、need、learn。","like、love、start、begin 兩種都可以。","介系詞（for、at、about、of）後面一定接 V-ing。"],
+ f:[["V-ing","enjoy / finish / mind / avoid + V-ing"],["to V","want / decide / hope / plan + to V"],["介系詞","介系詞 + V-ing"]],
+ ex:[["I enjoy listening to music.","我喜歡聽音樂。"],["She decided to learn English.","她決定學英文。"],["He is good at cooking.","他很會做菜。"],["Would you mind closing the window?","你介意關一下窗戶嗎？"]],
+ q:[["I finished ___ my homework.",["do","to do","doing"],2,"finish 後面接 V-ing。"],["We hope ___ you again.",["see","to see","seeing"],1,"hope 後面接 to V。"],["Thank you for ___ me.",["help","to help","helping"],2,"介系詞 for 後面接 V-ing。"],["He wants ___ a doctor.",["be","to be","being"],1,"want 後面接 to V。"]]},
+
+{id:"g_pastperfect",level:"B2",title:"過去完成式",sum:"說「過去某個時間點之前」就已經發生的事。",
+ pts:["結構：had + 過去分詞，所有主詞都一樣。","兩件過去的事，先發生的用過去完成式，後發生的用過去式。","常搭配 by the time、before、after、already、never。"],
+ f:[["結構","主詞 + had + p.p."],["搭配","When / By the time + 過去式, 主詞 + had + p.p."]],
+ ex:[["When I arrived, the movie had already started.","我到的時候，電影已經開始了。"],["She had never seen the sea before she was 20.","她 20 歲以前從沒看過海。"],["I realized I had left my keys at home.","我發現我把鑰匙忘在家裡了。"],["They had finished dinner when we got there.","我們到的時候，他們已經吃完晚餐了。"]],
+ q:[["By the time we got to the station, the train ___.",["left","had left","has left"],1,"火車在我們到之前就開走了，用過去完成式。"],["I ___ never flown before that trip.",["have","had","was"],1,"「那次旅行之前」是過去的過去，用 had。"],["He was tired because he ___ all day.",["had worked","has worked","works"],0,"累之前一整天都在工作，先發生的用 had + p.p.。"],["After she ___ her homework, she went out.",["had finished","has finished","finish"],0,"先寫完功課才出門，先發生的用過去完成式。"]]},
+{id:"g_reported",level:"B2",title:"間接引述",sum:"轉述別人說過的話。",
+ pts:["說話動詞是過去式（said、told）時，原句時態往前推一格：現在→過去，will→would，can→could。","代名詞和時間詞也要跟著改：I→he/she，tomorrow→the next day。","轉述問句時改成直述句的語序：He asked where I lived.（不是 where did I live）"],
+ f:[["直述","He said, \"I am tired.\""],["轉述","He said (that) he was tired."],["問句","She asked (me) + 疑問詞 + 主詞 + 動詞"]],
+ ex:[["He said he was tired.","他說他很累。"],["She said she would call me.","她說她會打給我。"],["He asked me where I lived.","他問我住在哪裡。"],["She told me she couldn't come.","她跟我說她不能來。"]],
+ q:[["She said, \"I like coffee.\" → She said she ___ coffee.",["likes","liked","has liked"],1,"現在式往前推成過去式。"],["He said, \"I will help you.\" → He said he ___ help me.",["will","would","can"],1,"will 變成 would。"],["\"Where do you work?\" → She asked me where I ___.",["work","worked","did work"],1,"時態往前推，而且改成直述語序。"],["\"I can swim.\" → He said he ___ swim.",["can","could","could to"],1,"can 變成 could。"]]},
+{id:"g_third",level:"B2",title:"第三類條件句與 wish",sum:"「要是當初…就好了」：和過去事實相反。",
+ pts:["第三類條件句：If + had p.p.，主要子句用 would have + p.p.，表示過去沒發生的事。","I wish + 過去式：希望現在不是這樣。","I wish + had p.p.：後悔過去的事。"],
+ f:[["第三類","If + had p.p., 主詞 + would have + p.p."],["wish（現在）","I wish + 主詞 + 過去式 / were"],["wish（過去）","I wish + 主詞 + had p.p."]],
+ ex:[["If I had left earlier, I wouldn't have missed the bus.","要是我早點出門，就不會錯過公車了。"],["If she had studied, she would have passed.","要是她有讀書，就會及格了。"],["I wish I spoke better English.","真希望我的英文說得更好。"],["I wish I had listened to you.","真希望當初有聽你的話。"]],
+ q:[["If you ___ me, I would have helped you.",["told","had told","have told"],1,"主要子句是 would have，if 子句用 had + p.p.。"],["If it hadn't rained, we ___ to the beach.",["would go","would have gone","will go"],1,"和過去事實相反，用 would have + p.p.。"],["I wish I ___ taller.",["am","were","will be"],1,"希望現在不一樣，用 were。"],["I wish I ___ that cake. Now I feel sick.",["didn't eat","hadn't eaten","don't eat"],1,"後悔過去的事，用 had + p.p.。"]]},
+{id:"g_modal",level:"B2",title:"助動詞推測 must / might / can't",sum:"表達你有多確定。",
+ pts:["must：幾乎確定「一定是」。","might、may、could：「可能是」，不太確定。","can't：確定「不可能」。","推測過去的事：助動詞 + have + p.p.（must have forgotten）。"],
+ f:[["現在","must / might / can't + 原形"],["過去","must / might / can't + have + p.p."]],
+ ex:[["He must be tired after the long trip.","長途旅行之後他一定很累。"],["She might be at home.","她可能在家。"],["That can't be true.","那不可能是真的。"],["They must have forgotten the meeting.","他們一定是忘了開會。"]],
+ q:[["The lights are off. They ___ be out.",["must","can't","should"],0,"燈都關了，幾乎確定出門了。"],["He's not answering. He ___ be busy.",["might","can't","mustn't"],0,"不確定原因，用 might。"],["You ___ be hungry. You just ate!",["can't","must","might"],0,"剛吃過，不可能餓。"],["The road is wet. It ___ rained last night.",["must have","can't have","should"],0,"推測過去的事，用 must have + p.p.。"]]},
+{id:"g_participle",level:"B2",title:"分詞構句與 -ing / -ed 形容詞",sum:"讓句子更簡潔，並分清楚 bored 和 boring。",
+ pts:["兩個子句主詞相同時，可以省略連接詞和主詞，把動詞改成分詞。","主動意思用 V-ing（Walking…），被動意思用 p.p.（Written…）。","-ing 形容詞描述「令人…的」事物；-ed 形容詞描述人「感到…」。"],
+ f:[["主動","V-ing…, 主詞 + 動詞"],["被動","p.p.…, 主詞 + 動詞"],["形容詞","事物 is interesting ／ 人 is interested"]],
+ ex:[["Walking along the street, I met an old friend.","走在街上時，我遇到一位老朋友。"],["Feeling tired, she went to bed early.","她覺得累，所以早早就睡了。"],["Written in simple English, the book is easy to read.","這本書用簡單的英文寫成，很好讀。"],["I'm interested in history. It's an interesting subject.","我對歷史有興趣，它是很有趣的科目。"]],
+ q:[["___ the news, she started to cry.",["Hearing","Heard","To hear"],0,"她「聽到」是主動，用 V-ing。"],["___ in 1900, the house is very old.",["Building","Built","Builds"],1,"房子是「被建造」的，用 p.p.。"],["The movie was so ___.",["bored","boring","bore"],1,"電影「令人無聊」，用 -ing。"],["I was ___ by the result.",["surprising","surprised","surprise"],1,"人「感到」驚訝，用 -ed。"]]},
+
+{id:"g_inversion",level:"C1",title:"倒裝句",sum:"把否定或限定副詞放句首，加強語氣。",
+ pts:["Never、Rarely、Seldom、Not only、Hardly、Only then 等放在句首時，主詞和助動詞要對調。","句中沒有助動詞時，要補 do / does / did。","多用在正式文章和演講。"],
+ f:[["結構","否定副詞 + 助動詞 + 主詞 + 動詞"],["例","Never have I… ／ Not only did he… ／ Hardly had I… when…"]],
+ ex:[["Never have I seen such a beautiful view.","我從沒看過這麼美的景色。"],["Not only did he finish early, but he also helped others.","他不但提早完成，還幫助了別人。"],["Hardly had I arrived when it started to rain.","我一到就開始下雨了。"],["Only then did I realize my mistake.","直到那時我才發現自己的錯。"]],
+ q:[["Never ___ such a mess.",["I have seen","have I seen","I saw"],1,"Never 放句首，助動詞 have 移到主詞前。"],["Not only ___ late, but she also forgot her book.",["she was","was she","she is"],1,"Not only 放句首要倒裝。"],["Rarely ___ eat out.",["we do","do we","we"],1,"沒有助動詞時補 do，再倒裝。"],["Only after the meeting ___ the truth.",["I learned","did I learn","I did learn"],1,"Only after… 放句首要倒裝，補 did。"]]},
+{id:"g_subj",level:"C1",title:"假設語氣進階",sum:"It's time、would rather、suggest that、as if 的特殊用法。",
+ pts:["It's (high) time + 主詞 + 過去式：早就該做了。","would rather + 主詞 + 過去式：寧願別人做某事。","suggest / insist / recommend that + 主詞 + 原形（美式英文省略 should）。","as if + 過去式 / were：好像…一樣（其實不是）。"],
+ f:[["It's time","It's time + 主詞 + 過去式"],["would rather","I'd rather + 主詞 + 過去式"],["建議","suggest / insist that + 主詞 + 原形"],["as if","as if + 主詞 + 過去式 / were"]],
+ ex:[["It's time we went home.","我們該回家了。"],["I'd rather you didn't smoke here.","我寧願你不要在這裡抽菸。"],["The doctor suggested that he rest for a week.","醫生建議他休息一週。"],["He talks as if he knew everything.","他說話的樣子好像什麼都懂。"]],
+ q:[["It's high time you ___ a job.",["find","found","will find"],1,"It's time 後面用過去式。"],["I insist that he ___ the truth.",["tells","tell","told"],1,"insist that 後面用原形。"],["I'd rather you ___ tomorrow.",["come","came","will come"],1,"would rather + 主詞 + 過去式。"],["She acts as if she ___ the boss.",["is","were","be"],1,"as if 表示與事實相反，用 were。"]]},
+{id:"g_cleft",level:"C1",title:"強調句 It is… that / What…",sum:"把句子裡最想強調的部分挑出來。",
+ pts:["It is / was + 強調的部分 + that（強調人時也可以用 who）。","What + 子句 + is / was…：「…的是…」。","What 開頭的主詞是一件事，動詞通常用單數。"],
+ f:[["It 句型","It was + 強調部分 + that / who + 其餘"],["What 句型","What + 主詞 + 動詞 + is / was + 重點"]],
+ ex:[["It was Tom who broke the window.","打破窗戶的是 Tom。"],["It is in Tainan that I grew up.","我是在台南長大的。"],["What I need is a long vacation.","我需要的是一個長假。"],["What surprised me was his attitude.","讓我驚訝的是他的態度。"]],
+ q:[["It was my sister ___ called you.",["who","which","what"],0,"強調人，用 who（或 that）。"],["___ I want is some peace and quiet.",["That","What","Which"],1,"「我想要的」用 What。"],["It was in 2020 ___ we moved here.",["when","that","which"],1,"It was… that 強調句固定用 that。"],["What she said ___ true.",["were","was","are"],1,"What 子句當主詞視為單數。"]]},
+{id:"g_nominal",level:"C1",title:"名詞化與正式寫作",sum:"把動詞、形容詞改成名詞，讓文章更正式。",
+ pts:["正式報告、論文和商務文件常用名詞代替動詞。","常見字尾：-tion / -sion（decision）、-ment（improvement）、-ance / -ence（importance）、-al（refusal）。","名詞化後常搭配 make、there is、due to 等句型。"],
+ f:[["動詞→名詞","decide→decision ・ improve→improvement ・ analyze→analysis"],["形容詞→名詞","important→importance ・ difficult→difficulty"]],
+ ex:[["We made the decision to expand.","我們做出了擴張的決定。"],["There was an improvement in sales.","銷售有所改善。"],["The failure of the project was due to poor planning.","專案失敗是因為規劃不良。"],["The introduction of new rules caused confusion.","新規定的推出造成了混亂。"]],
+ q:[["The ___ of the new system took six months.",["implement","implementation","implemented"],1,"the … of 中間要放名詞。"],["There has been a sharp ___ in prices.",["increase","increasing","increased"],0,"a sharp 後面接名詞 increase。"],["We need to consider the ___ of this decision.",["important","importance","importantly"],1,"the … of 中間要放名詞。"],["Her ___ to help surprised everyone.",["refuse","refusal","refused"],1,"refuse 的名詞是 refusal。"]]},
+{id:"g_linkers",level:"C1",title:"高級連接詞",sum:"讓句子之間的邏輯更清楚、更正式。",
+ pts:["however、nevertheless（然而）：通常放在句首，後面加逗號。","therefore（因此）、moreover（此外）。","although + 子句；despite / in spite of + 名詞或 V-ing。","whereas：對比兩件事（而…）。"],
+ f:[["轉折","句子. However, 句子."],["讓步","Although + 子句 ／ Despite + 名詞 / V-ing"],["對比","子句, whereas + 子句"]],
+ ex:[["The plan was risky; however, it worked.","這計畫很冒險，然而成功了。"],["Despite the rain, we went out.","儘管下雨，我們還是出門了。"],["Although it was late, he kept working.","雖然很晚了，他還是繼續工作。"],["Some people like cities, whereas others prefer the countryside.","有些人喜歡城市，而有些人喜歡鄉下。"]],
+ q:[["___ being tired, she finished the report.",["Although","Despite","However"],1,"後面是 V-ing，用 Despite。"],["It was expensive. ___, we bought it.",["Nevertheless","Despite","Although"],0,"放句首加逗號表示轉折，用 Nevertheless。"],["___ he studied hard, he failed.",["Despite","Although","However"],1,"後面是完整子句，用 Although。"],["He is rich, ___ his brother is poor.",["whereas","despite","therefore"],0,"對比兩個人，用 whereas。"]]},
+
+{id:"g_mixed",level:"C2",title:"混合條件句",sum:"過去的事影響現在，或現在的特質影響過去。",
+ pts:["過去影響現在：If + had p.p., 主詞 + would + 原形 + now。","現在的特質影響過去：If + 過去式 / were, 主詞 + would have + p.p.。","判斷關鍵：看 if 子句和主要子句各自講的是「過去」還是「現在」。"],
+ f:[["過去→現在","If + had p.p., would + 原形"],["現在→過去","If + 過去式, would have + p.p."]],
+ ex:[["If I had taken that job, I would be rich now.","要是當初接了那份工作，我現在就有錢了。"],["If she weren't so shy, she would have spoken up.","要不是她這麼害羞，當時她就會開口了。"],["If we had booked earlier, we wouldn't be standing in line now.","要是早點訂，我們現在就不用排隊了。"],["If he were more careful, he wouldn't have lost his wallet.","要是他細心一點，就不會弄丟錢包了。"]],
+ q:[["If I had studied medicine, I ___ a doctor now.",["would be","would have been","will be"],0,"過去的選擇影響現在，用 would + 原形。"],["If she ___ afraid of flying, she would have come with us.",["isn't","weren't","hadn't"],1,"怕坐飛機是她一直以來的特質（現在），用 weren't。"],["If you had listened to me, we ___ lost now.",["wouldn't be","won't be","wouldn't have"],0,"過去沒聽話，影響現在，用 wouldn't be。"],["If I ___ you, I would have said no.",["am","were","had"],1,"「如果我是你」是現在的假設，用 were。"]]},
+{id:"g_ellipsis",level:"C2",title:"省略與替代",sum:"So do I、Neither can I、I hope not：道地的簡短回應。",
+ pts:["So + 助動詞 + 主詞：我也是（肯定）。","Neither / Nor + 助動詞 + 主詞：我也不（否定）。","do so 代替前面提過的動作；one / ones 代替前面提過的名詞。","I think so / I hope not：用 so 和 not 代替整個子句。"],
+ f:[["我也是","So + 助動詞 + 主詞"],["我也不","Neither + 助動詞 + 主詞"],["替代","do so ・ one / ones ・ I hope so / not"]],
+ ex:[["I love jazz. — So do I.","我愛爵士樂。——我也是。"],["She can't swim, and neither can I.","她不會游泳，我也不會。"],["He promised to help, and he did so.","他答應會幫忙，也真的做到了。"],["Will it rain tomorrow? — I hope not.","明天會下雨嗎？——希望不會。"]],
+ q:[["I've never been to Paris. — ___.",["Neither have I","So have I","Neither I have"],0,"否定的「我也沒有」，Neither + 助動詞 + 主詞。"],["She works hard, and so ___ her husband.",["is","does","do"],1,"works 是一般動詞，助動詞用 does。"],["Will it rain? — I hope ___.",["not","no","don't"],0,"I hope not 代替 I hope it won't rain。"],["These shoes are too small. Do you have bigger ___?",["one","ones","it"],1,"代替複數名詞 shoes，用 ones。"]]},
+{id:"g_absolute",level:"C2",title:"完成分詞與獨立分詞構句",sum:"Having finished…、Weather permitting…、Generally speaking…",
+ pts:["Having + p.p.：強調這個動作先完成，才做下一件事。","主詞不同時，分詞前保留自己的主詞：Weather permitting, …","有些固定說法沒有主詞：generally speaking、strictly speaking、all things considered。"],
+ f:[["先完成","Having + p.p., 主詞 + 動詞"],["獨立分詞","名詞 + 分詞, 主詞 + 動詞"],["固定用法","Generally speaking ・ All things considered"]],
+ ex:[["Having finished the report, she left early.","寫完報告後，她提早離開。"],["Weather permitting, we'll have a picnic.","天氣允許的話，我們會去野餐。"],["All things considered, it was a success.","綜合來看，這次是成功的。"],["Generally speaking, the plan is good.","一般來說，這個計畫不錯。"]],
+ q:[["___ the email, he logged off.",["Having sent","Sent","Having send"],0,"先寄完信才登出，用 Having + p.p.。"],["All things ___, it was a success.",["consider","considered","considering"],1,"固定用法 all things considered。"],["Strictly ___, this is not allowed.",["speak","speaking","spoken"],1,"固定用法 strictly speaking。"],["___ in the countryside, she loves nature.",["Having grown up","Grew up","Having grow up"],0,"在鄉下長大是先發生的，用 Having + p.p.。"]]},
+{id:"g_register",level:"C2",title:"正式與非正式語體",sum:"同一件事，在信件和聊天裡要用不同的說法。",
+ pts:["正式寫作少用片語動詞，改用單一動詞：get→receive、find out→ascertain、ask for→request。","正式寫作避免縮寫：don't→do not。","常用被動和名詞化讓語氣更客觀。"],
+ f:[["非正式→正式","buy→purchase ・ help→assist ・ need→require"],["非正式→正式","tell→inform ・ get→obtain / receive"]],
+ ex:[["Please let me know. → Please inform me.","請告訴我。→ 敬請告知。"],["We need more time. → Additional time is required.","我們需要更多時間。→ 尚需額外時間。"],["Can you help me? → Could you possibly assist me?","你能幫我嗎？→ 不知能否請您協助？"],["We got your letter. → We have received your letter.","收到你的信了。→ 來函已收悉。"]],
+ q:[["Which is the formal word for \"buy\"?",["get","purchase","grab"],1,"purchase 是 buy 的正式說法。"],["We ___ your prompt attention to this matter.",["want","would appreciate","need"],1,"would appreciate 語氣最正式有禮。"],["Which is the formal way to say \"find out\"?",["ascertain","figure out","check out"],0,"ascertain 是正式用字。"],["Which sentence is the most formal?",["Sorry for the wait!","I'm sorry for the delay.","We apologize for any inconvenience."],2,"We apologize for any inconvenience 是標準的正式道歉。"]]},
+{id:"g_hedging",level:"C2",title:"委婉表達 Hedging",sum:"學術和商務寫作中避免把話說死。",
+ pts:["用 may、might、could 降低肯定程度。","用 suggest、appear、seem、tend to 代替 prove、is。","用 to some extent、arguably、in most cases 限縮範圍。"],
+ f:[["動詞","suggest ・ appear to ・ tend to ・ seem to"],["副詞片語","arguably ・ to some extent ・ in most cases"]],
+ ex:[["The results suggest that the method works.","結果顯示這個方法可能有效。"],["This may be due to the weather.","這可能是天氣造成的。"],["It appears that the market is slowing.","市場似乎正在放緩。"],["To some extent, this is true.","某種程度上，這是對的。"]],
+ q:[["Which sentence is the most cautious?",["This proves the theory.","This suggests the theory may be correct.","The theory is right."],1,"suggest + may 是典型的委婉說法。"],["Prices ___ rise in winter.",["tend to","are always","must"],0,"tend to 表示「往往」，不把話說死。"],["It ___ that the client is unhappy.",["appears","appearing","appear"],0,"It appears that…：看起來似乎…"],["This is, ___, the best solution.",["arguably","argue","argument"],0,"arguably：可以說是，但保留討論空間。"]]}
+];
+
+// ---------- dialogues ----------
+// lines: [speaker, en, zh]
+const DIALOGS=[
+{id:"d_meet",level:"A1",title:"認識新朋友",scene:"在公園遇到新朋友",lines:[
+["A","Hi! I'm Amy. What's your name?","嗨！我是 Amy。你叫什麼名字？"],["B","Hi, Amy. I'm Ken. Nice to meet you.","嗨，Amy。我是 Ken。很高興認識你。"],
+["A","Nice to meet you too. How old are you?","我也很高興認識你。你幾歲？"],["B","I'm twelve. And you?","我十二歲。你呢？"],
+["A","I'm twelve too! Do you like dogs?","我也十二歲！你喜歡狗嗎？"],["B","Yes, I love dogs. I have a little brown dog.","喜歡，我超愛狗。我有一隻棕色的小狗。"],["A","Cool! Let's play together.","好酷！我們一起玩吧。"]]},
+{id:"d_breakfast",level:"A1",title:"早餐店點餐",scene:"早上在早餐店",lines:[
+["A","Good morning! What would you like?","早安！要點什麼？"],["B","Good morning. A ham sandwich, please.","早安。請給我一個火腿三明治。"],
+["A","Anything to drink?","要喝什麼嗎？"],["B","Milk tea, please.","請給我奶茶。"],["A","Small or large?","小杯還是大杯？"],
+["B","Large, please. How much is it?","大杯，謝謝。多少錢？"],["A","It's seventy dollars.","七十元。"],["B","Here you are. Thank you!","給你。謝謝！"]]},
+{id:"d_way",level:"A2",title:"問路",scene:"在街上問車站怎麼走",lines:[
+["A","Excuse me, where is the train station?","不好意思，火車站在哪裡？"],["B","Go straight and turn left at the second corner.","直走，在第二個路口左轉。"],
+["A","Is it far from here?","離這裡遠嗎？"],["B","No, it's about five minutes on foot.","不遠，走路大約五分鐘。"],
+["A","Thank you very much!","非常謝謝你！"],["B","You're welcome. Have a nice day.","不客氣，祝你有美好的一天。"]]},
+{id:"d_doctor",level:"A2",title:"看醫生",scene:"在診所看感冒",lines:[
+["A","What's wrong?","哪裡不舒服？"],["B","I have a headache and a fever.","我頭痛又發燒。"],["A","When did it start?","什麼時候開始的？"],
+["B","Yesterday evening.","昨天傍晚。"],["A","You have a cold. Take this medicine three times a day.","你感冒了。這個藥一天吃三次。"],
+["B","Should I stay home?","我應該待在家嗎？"],["A","Yes. Get some rest and drink lots of water.","對，多休息、多喝水。"]]},
+{id:"d_hotel",level:"B1",title:"飯店入住",scene:"晚上到飯店櫃檯 check in",lines:[
+["A","Good evening. I have a reservation under the name Chen.","晚安，我用陳的名字訂了房。"],["B","Welcome, Ms. Chen. May I see your passport?","陳小姐，歡迎。可以看一下您的護照嗎？"],
+["A","Sure, here it is.","好的，在這裡。"],["B","You're in room 805. Breakfast is served from seven to ten.","您的房間是 805 號。早餐供應時間是七點到十點。"],
+["A","Is Wi-Fi included?","有含 Wi-Fi 嗎？"],["B","Yes. The password is on your key card.","有的，密碼在您的房卡上。"],
+["A","Great. Could I get a late check-out tomorrow?","太好了。明天可以晚一點退房嗎？"],["B","I can give you until one p.m. Enjoy your stay!","可以讓您延到下午一點。祝您住宿愉快！"]]},
+{id:"d_interview",level:"B1",title:"工作面試",scene:"面試業務工作",lines:[
+["A","Tell me a little about yourself.","請簡單介紹一下你自己。"],["B","I studied marketing, and I have three years of experience in sales.","我念行銷，有三年業務經驗。"],
+["A","Why do you want to work here?","你為什麼想來這裡工作？"],["B","I like your products, and I want to improve my skills in a bigger team.","我喜歡貴公司的產品，也想在更大的團隊裡提升自己。"],
+["A","What is your biggest strength?","你最大的優點是什麼？"],["B","I'm organized, and I'm good at working with customers.","我做事有條理，也很擅長和客戶相處。"],
+["A","When can you start?","你什麼時候可以開始上班？"],["B","I can start next month.","我下個月就可以開始。"]]},
+{id:"d_meeting",level:"B2",title:"專案會議",scene:"討論網站專案進度",lines:[
+["A","Let's get started. Where are we on the website project?","我們開始吧。網站專案進度到哪了？"],["B","We're slightly behind schedule. The designer needs another week.","進度稍微落後，設計師還需要一週。"],
+["A","Will that affect the launch date?","會影響上線日期嗎？"],["B","Not if we shorten the testing phase by a few days.","如果把測試階段縮短幾天就不會。"],
+["A","I'd rather not cut testing. Can we bring in extra help?","我不太想縮減測試。可以找人來支援嗎？"],["B","That's a good point. I'll ask IT if anyone is available.","有道理。我去問資訊部門有沒有人有空。"],
+["A","Great. Please keep me posted.","很好，有進度隨時告訴我。"]]},
+{id:"d_complaint",level:"B2",title:"客訴處理",scene:"打電話給客服問包裹",lines:[
+["A","I ordered a jacket two weeks ago, but it still hasn't arrived.","我兩週前訂了一件外套，到現在還沒收到。"],["B","I'm sorry to hear that. May I have your order number?","很抱歉。可以給我您的訂單編號嗎？"],
+["A","It's four, eight, two, seven, one.","是 48271。"],["B","Thank you. It seems the package was delayed at the warehouse.","謝謝。看起來包裹在倉庫延誤了。"],
+["A","That's really frustrating. I need it for a trip this weekend.","這真讓人困擾，我這個週末旅行要穿。"],["B","I completely understand. We'll send it by express today at no extra cost.","我完全理解。我們今天會用快遞寄出，不另外收費。"],
+["A","Thank you. I appreciate that.","謝謝，很感謝你。"]]},
+{id:"d_negotiate",level:"C1",title:"價格談判",scene:"和供應商談大量訂單",lines:[
+["A","We're interested in placing a large order, but your price is higher than we expected.","我們有意下大量訂單，但你們的價格比預期高。"],["B","I understand. What volume are you considering?","了解。您考慮的數量是多少？"],
+["A","Around ten thousand units per quarter.","每季大約一萬件。"],["B","At that volume, we could offer a five percent discount.","這個數量的話，我們可以給百分之五的折扣。"],
+["A","Our budget would work better with eight percent.","百分之八會比較符合我們的預算。"],["B","If you commit to a twelve-month contract, we could meet you at seven.","如果您簽十二個月的合約，我們可以給到百分之七。"],
+["A","That sounds feasible. Let me run it by our finance team.","聽起來可行。我先跟財務團隊確認一下。"],["B","Of course. I'll send you a revised quotation today.","當然，我今天會把修改後的報價單寄給您。"]]},
+{id:"d_news",level:"C1",title:"討論時事",scene:"同事聊高齡化社會",lines:[
+["A","Did you see the report on our aging population?","你看了那份關於人口高齡化的報告嗎？"],["B","Yes. It's alarming how fast the workforce is shrinking.","看了，勞動人口減少的速度很驚人。"],
+["A","Some argue that automation could fill the gap.","有人認為自動化可以補上缺口。"],["B","To some extent, but it won't solve the healthcare challenges.","某種程度上是，但解決不了醫療照護的問題。"],
+["A","True. The government may need to rethink several policies.","沒錯，政府可能得重新檢討好幾項政策。"],["B","Arguably, it's one of the most pressing issues we face.","可以說，這是我們面臨最迫切的問題之一。"]]},
+{id:"d_debate",level:"C2",title:"辯論觀點",scene:"討論遠距工作",lines:[
+["A","Remote work is here to stay, whether managers like it or not.","不管主管喜不喜歡，遠距工作都會持續下去。"],["B","I'm not entirely convinced. Collaboration inevitably suffers without face-to-face contact.","我不完全認同。少了面對面接觸，合作難免會受影響。"],
+["A","That's debatable. Many teams are more productive at home.","這有待商榷，很多團隊在家反而更有效率。"],["B","Productivity, perhaps. But what about mentoring junior staff?","效率也許是，但新進同仁的指導怎麼辦？"],
+["A","Fair point. A hybrid model might strike the right balance.","說得有道理。混合模式也許能取得平衡。"],["B","Now that's something we can agree on.","這點我們倒是有共識。"]]},
+{id:"d_idioms",level:"C2",title:"道地閒聊",scene:"加班時跟同事聊天",lines:[
+["A","You look exhausted. Burning the midnight oil again?","你看起來累壞了，又熬夜了？"],["B","Afraid so. The deadline's tomorrow, and we're back to square one.","恐怕是。明天就截止，結果我們又回到原點了。"],
+["A","That's rough. Still, starting over might be a blessing in disguise.","真慘。不過重新來過也許是因禍得福。"],["B","Maybe. Honestly, the elephant in the room is our manager.","也許吧。老實說，大家避而不談的問題其實是我們主管。"],
+["A","Then you'll have to bite the bullet and talk to him.","那你只好硬著頭皮去跟他談了。"],["B","I know. The ball's in my court now.","我知道，現在輪到我出招了。"]]}
+];
+
+// ---------- icons for new tabs ----------
+Object.assign(IC,{
+pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H10l-5 4v-4H4z"/><path d="M8 10h8M8 13h5" stroke-linecap="round"/></svg>',
+target:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>'});
+
+// ---------- daily tasks ----------
+const newGoal=()=>S.newGoal||10;
+const allWords=()=>allSets().flatMap(s=>s.words);
+const dueList=()=>allWords().filter(isDue);
+const newList=()=>lvSets().flatMap(s=>s.words).filter(w=>!seen(w));
+function startDaily(){const ds=dayState();const rev=shuffle(dueList()).slice(0,40);
+  const nw=newList().slice(0,Math.max(0,newGoal()-ds.newN));
+  if(!rev.length&&!nw.length)return toast("今天的單字任務完成了！");
+  run={kind:"flash",from:"daily",list:[...rev,...nw],i:0,ok:0};go({name:"flash"})}
+function dailyPanel(){const ds=dayState(),due=dueList().length,goal=newGoal(),nleft=Math.max(0,goal-ds.newN),avail=newList().length,nn=Math.min(nleft,avail);
+  const rows=[
+    ["複習到期單字",ds.revN,ds.revN+due,due===0&&ds.revN===0?"今天沒有到期的字":`${ds.revN} / ${ds.revN+due}`],
+    ["學新單字",Math.min(ds.newN,goal),goal,avail===0&&nleft>0?"這一級的新字都學過了":`${Math.min(ds.newN,goal)} / ${goal}`],
+    ["上一堂文法課",Math.min(ds.gram,1),1,ds.gram?"完成":"未完成"],
+    ["聽一段情境對話",Math.min(ds.talk,1),1,ds.talk?"完成":"未完成"]];
+  const wordsDone=due===0&&nn===0;
+  return `<section class="panel daily">
+    <div class="row"><h2>今日任務</h2><label class="ngl" for="ng">每天新字
+      <select id="ng">${[5,10,15,20].map(n=>`<option value="${n}" ${n===goal?"selected":""}>${n}</option>`).join("")}</select></label></div>
+    <div class="tasks">${rows.map(([t,d,tot,txt])=>{const ok=tot===0||d>=tot;return `<div class="task ${ok?"ok":""}"><i aria-hidden="true">${ok?"✓":""}</i><span>${t}</span><span class="muted">${txt}</span></div>`}).join("")}</div>
+    ${wordsDone?`<p class="donemsg">今天的單字任務完成了，可以去上文法或聽對話。</p>`:`<button class="btn pri" data-q="daily">開始今日單字（複習 ${Math.min(due,40)}・新字 ${nn}）</button>`}
+    <div class="btns"><button class="btn ghost" data-q="grammar">文法課</button><button class="btn ghost" data-q="talk">情境對話</button></div>
+    ${S.placed?"":`<button class="ptip" data-q="placement">${IC.target}<span>第一次用？先做 3 分鐘程度測驗，找出該從哪一級開始</span><b>›</b></button>`}
+  </section>`}
+document.addEventListener("change",e=>{
+  if(e.target.id==="ng"){S.newGoal=+e.target.value;save();render()}
+  if(e.target.id==="hz"){S.hideZh=!e.target.checked;save();document.querySelectorAll(".bub .zh").forEach(z=>z.hidden=S.hideZh)}});
+
+// ---------- grammar ----------
+let GQ=null;
+const gNum=g=>GRAMMAR.filter(x=>x.level===g.level).indexOf(g)+1;
+V.grammar=()=>{const ls=GRAMMAR.filter(g=>S.level==="全部"||g.level===S.level),done=ls.filter(g=>S.gram[g.id]).length;
+  app.innerHTML=`<div class="row"><h2>文法課</h2><span class="muted" style="font-size:13px">已完成 ${done} / ${ls.length} 課</span></div>${lvBar()}
+  <div class="glist">${ls.map(g=>`<button class="gcard" data-g="${g.id}"><span class="gnum ${S.gram[g.id]?"ok":""}">${S.gram[g.id]?"✓":gNum(g)}</span>
+    <div style="min-width:0"><h3>${esc(g.title)}</h3><p>${esc(g.sum)}</p></div>${S.level==="全部"?`<span class="chip">${g.level}</span>`:""}</button>`).join("")}</div>`;
+  app.onclick=e=>{const b=e.target.closest("[data-g]");if(b)go({name:"lesson",id:b.dataset.g})}};
+V.lesson=()=>{const g=GRAMMAR.find(x=>x.id===view.id);if(!g)return go({name:"grammar"});
+  if(view.quiz&&GQ&&GQ.g===g)return lessonQuiz(g);
+  app.innerHTML=`<button class="back" data-back>${IC.left}文法課</button>
+  <section class="panel lesson">
+    <span class="chip">${g.level}・第 ${gNum(g)} 課${S.gram[g.id]?"・已完成":""}</span>
+    <h2 style="font-size:22px">${esc(g.title)}</h2><p class="muted" style="margin:0">${esc(g.sum)}</p>
+    <h3>重點</h3><ul>${g.pts.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>
+    <h3>公式</h3><div class="ftable">${g.f.map(([k,v])=>`<div class="frow"><span>${esc(k)}</span><code>${esc(v)}</code></div>`).join("")}</div>
+    <h3>例句</h3><div class="wlist">${g.ex.map(([en,zh])=>`<div class="witem ex2"><button class="say" data-say="${esc(en)}" aria-label="發音">${IC.spk}</button><div style="min-width:0"><div class="exen">${esc(en)}</div><div class="zh">${esc(zh)}</div></div></div>`).join("")}</div>
+  </section>
+  <button class="btn pri" data-start>開始小測驗（${g.q.length} 題）</button>`;
+  app.onclick=e=>{if(e.target.closest("[data-back]"))return go({name:"grammar"});
+    const sy=e.target.closest("[data-say]");if(sy)return speak(sy.dataset.say);
+    if(e.target.closest("[data-start]")){GQ={g,i:0,ok:0,ans:null,saved:false};go({name:"lesson",id:g.id,quiz:true})}}};
+function fmtQ(t){return esc(t).replace(/___/g,'<span class="blank">＿＿＿</span>')}
+function lessonQuiz(g){const n=g.q.length;
+  if(GQ.i>=n){if(!GQ.saved){GQ.saved=true;const prev=S.gram[g.id];S.gram[g.id]={best:Math.max(GQ.ok,prev?prev.best:0),d:todayStr()};dayState().gram++;save();markToday()}
+    const list=GRAMMAR.filter(x=>x.level===g.level),nx=list[list.indexOf(g)+1]||GRAMMAR[GRAMMAR.indexOf(g)+1];
+    app.innerHTML=`<section class="panel done" style="padding:28px 16px"><span style="font-size:42px" aria-hidden="true">${GQ.ok===n?"🎉":GQ.ok>=n/2?"👍":"💪"}</span>
+      <div class="big">${GQ.ok}/${n}</div><h2>${esc(g.title)}</h2><p class="muted" style="margin:0">${GQ.ok===n?"全對！這一課你學會了。":"錯的題目再看一次重點，會更清楚。"}</p></section>
+      <div class="btns"><button class="btn ghost" data-re>再看一次重點</button>${nx?`<button class="btn pri" data-nx="${nx.id}">下一課</button>`:`<button class="btn pri" data-list>回文法課</button>`}</div>`;
+    app.onclick=e=>{if(e.target.closest("[data-re]"))return go({name:"lesson",id:g.id});
+      const b=e.target.closest("[data-nx]");if(b)return go({name:"lesson",id:b.dataset.nx});if(e.target.closest("[data-list]"))go({name:"grammar"})};return}
+  const [q,opts,a,why]=g.q[GQ.i];
+  app.innerHTML=`<div class="prog"><button class="back" data-quit aria-label="結束">✕</button><div class="bar"><div style="width:${GQ.i/n*100}%;background:var(--accent)"></div></div><span>${GQ.i}/${n}</span></div>
+  <section class="panel" style="padding:24px 16px;display:flex;flex-direction:column;gap:6px"><span class="muted" style="font-size:13px">選出正確的答案</span><div class="qtext">${fmtQ(q)}</div>${qtools(q,opts)}</section>
+  <div class="opts">${opts.map((o,i)=>`<button class="opt" data-o="${i}">${esc(o)}</button>`).join("")}</div>
+  <div class="why" id="why" hidden></div>
+  <button class="btn pri" id="gnext" hidden>${GQ.i+1<n?"下一題":"看結果"}</button>`;
+  app.onclick=e=>{if(e.target.closest("[data-quit]"))return go({name:"lesson",id:g.id});
+    if(e.target.closest("#gnext")){GQ.i++;return render()}
+    const o=e.target.closest("[data-o]");if(!o||GQ.ans!==null&&GQ.ans===GQ.i)return;GQ.ans=GQ.i;
+    const ok=+o.dataset.o===a;if(ok)GQ.ok++;
+    app.querySelectorAll("[data-o]").forEach(b=>{if(+b.dataset.o===a)b.classList.add("right");else if(b===o)b.classList.add("wrong")});
+    const w=document.getElementById("why");w.hidden=false;w.className="why "+(ok?"good":"bad");w.innerHTML=`<b>${ok?"答對了！":"正確答案："+esc(opts[a])}</b>${esc(why)}`;
+    document.getElementById("gnext").hidden=false;
+    if(q.includes("___"))speak(q.replace("___",opts[a]).split("→").pop().trim())};
+  if(S.autoRead!==false)setTimeout(()=>readQ(q),250)}
+
+// ---------- placement test ----------
+let PT=null;
+function startPlacement(){const qs=[];
+  for(const L of LEVELS){
+    const gq=shuffle(GRAMMAR.filter(g=>g.level===L).flatMap(g=>g.q.map(q=>({q:q[0],opts:q[1],a:q[2],kind:"文法"})))).slice(0,2);
+    const ws=shuffle(allSets().filter(s=>s.level===L).flatMap(s=>s.words).filter(w=>!/[.?!,]/.test(w.en)));
+    const vq=ws.slice(0,2).map(w=>{const others=shuffle(ws.filter(x=>x.zh!==w.zh&&x.en!==w.en)).slice(0,3),opts=shuffle([w,...others]);
+      return{q:w.en,opts:opts.map(o=>o.zh),a:opts.indexOf(w),kind:"單字"}});
+    [...vq,...gq].forEach(x=>qs.push({...x,L}))}
+  PT={qs,i:0,score:{}};go({name:"placement"})}
+V.placement=()=>{
+  if(!PT){app.innerHTML=`<button class="back" data-home>${IC.left}首頁</button>
+    <section class="panel" style="display:flex;flex-direction:column;gap:12px">
+      <h2 style="font-size:22px">程度測驗</h2>
+      <p style="margin:0">共 24 題，從 A1 一路到 C2，每一級 2 題單字、2 題文法，大約 3 分鐘。</p>
+      <p class="muted" style="margin:0">不會的題目請選「我不確定」，不要用猜的，結果會比較準。測驗完會建議你從哪一級開始。</p>
+      ${S.placed?`<p class="muted" style="margin:0">上次結果：建議從 <b>${S.placed.level}</b> 開始（${S.placed.d}）</p>`:""}
+      <button class="btn pri" data-pstart>開始測驗</button></section>`;
+    app.onclick=e=>{if(e.target.closest("[data-home]"))return go({name:"home"});if(e.target.closest("[data-pstart]"))startPlacement()};return}
+  const n=PT.qs.length;
+  if(PT.i>=n){let rec="C2";for(const L of LEVELS){if((PT.score[L]||0)<3){rec=L;break}}
+    app.innerHTML=`<section class="panel" style="display:flex;flex-direction:column;gap:14px">
+      <span class="muted">測驗結果</span><h2 style="font-size:24px">建議從 ${rec} 開始</h2>
+      <p style="margin:0">${rec}・${LVINFO[rec][0]}・${LVINFO[rec][1]}：${LVINFO[rec][2]}</p>
+      <div class="pres">${LEVELS.map(L=>{const s=PT.score[L]||0;return `<div class="prow ${L===rec?"rec":""}"><b>${L}</b><div class="bar"><div style="width:${s/4*100}%;${s>=3?"":"background:var(--sun)"}"></div></div><span>${s}/4</span></div>`}).join("")}</div>
+      <p class="muted" style="margin:0;font-size:13px">每一級答對 3 題以上算過關，建議從第一個沒過關的級別開始。</p>
+      <button class="btn pri" data-use="${rec}">從 ${rec} 開始學</button><button class="btn ghost" data-pstart>重新測驗</button></section>`;
+    app.onclick=e=>{const u=e.target.closest("[data-use]");if(u){S.level=u.dataset.use;S.placed={level:u.dataset.use,d:todayStr()};save();PT=null;toast("已設定為 "+u.dataset.use);return go({name:"home"})}
+      if(e.target.closest("[data-pstart]"))startPlacement()};return}
+  const x=PT.qs[PT.i];
+  app.innerHTML=`<div class="prog"><button class="back" data-quit aria-label="結束">✕</button><div class="bar"><div style="width:${PT.i/n*100}%;background:var(--accent)"></div></div><span>${PT.i+1}/${n}</span></div>
+  <section class="panel" style="padding:24px 16px;display:flex;flex-direction:column;gap:6px"><span class="muted" style="font-size:13px">${x.kind==="單字"?"這個字是什麼意思？":"選出正確的答案"}</span>
+    <div class="qtext" ${x.kind==="單字"?'style="font-family:var(--display);font-size:30px"':""}>${fmtQ(x.q)}</div>${qtools(x.q,x.opts)}</section>
+  <div class="opts">${x.opts.map((o,i)=>`<button class="opt" data-o="${i}">${esc(o)}</button>`).join("")}<button class="opt unsure" data-o="-1">我不確定</button></div>`;
+  app.onclick=e=>{if(e.target.closest("[data-quit]")){PT=null;return go({name:"home"})}
+    const o=e.target.closest("[data-o]");if(!o)return;if(+o.dataset.o===x.a)PT.score[x.L]=(PT.score[x.L]||0)+1;PT.i++;render()};
+  if(S.autoRead!==false)setTimeout(()=>readQ(x.q),250)};
+
+// ---------- dialogues ----------
+let P=null;
+if(!S.talk)S.talk={};
+function stopP(){if(!P)return;P.tok++;P=null;try{speechSynthesis.cancel()}catch(e){}hl(-1)}
+function enVoices(){const a=enVoice(),g=goodVoices();return [a,g.find(v=>a&&v.name!==a.name)||a]}
+function hl(i){document.querySelectorAll(".bub").forEach((b,j)=>b.classList.toggle("now",j===i));const el=document.querySelector(".bub.now");if(el)el.scrollIntoView({block:"nearest",behavior:"smooth"})}
+function setHint(t){const h=document.getElementById("phint");if(h)h.textContent=t}
+async function playDialog(d,mode){stopP();P={tok:1,mode};const tok=P.tok,ok=()=>P&&P.tok===tok,vs=enVoices(),va=vs[0],vb=vs[1]||vs[0];
+  setHint(mode==="shadow"?"跟讀模式：聽完一句，換你大聲念出來":"播放中…");
+  for(let i=0;i<d.lines.length;i++){if(!ok())return;hl(i);const [sp,en]=d.lines[i];
+    await say(en,"en-US",S.slowTalk?.75:.95,sp==="A"?va:vb);if(!ok())return;
+    if(mode==="shadow"){setHint("換你念 🗣");await wait(1200+en.length*85);if(!ok())return;setHint("")}else await wait(450)}
+  if(!ok())return;P=null;hl(-1);setHint("");dayState().talk++;S.talk[d.id]=todayStr();save();markToday();toast(mode==="shadow"?"跟讀完成！":"聽完了！")}
+V.talk=()=>{const ls=DIALOGS.filter(d=>S.level==="全部"||d.level===S.level);
+  app.innerHTML=`<div class="row"><h2>情境對話</h2><span class="muted" style="font-size:13px">可以整段聽，也可以跟讀</span></div>${lvBar()}
+  <div class="glist">${ls.map(d=>`<button class="gcard" data-d="${d.id}"><span class="gnum ${S.talk[d.id]?"ok":""}">${S.talk[d.id]?"✓":IC.chat}</span>
+    <div style="min-width:0"><h3>${esc(d.title)}</h3><p>${esc(d.scene)}・${d.lines.length} 句</p></div><span class="chip">${d.level}</span></button>`).join("")}</div>`;
+  app.onclick=e=>{const b=e.target.closest("[data-d]");if(b)go({name:"dialog",id:b.dataset.d})}};
+V.dialog=()=>{const d=DIALOGS.find(x=>x.id===view.id);if(!d)return go({name:"talk"});
+  app.innerHTML=`<button class="back" data-back>${IC.left}情境對話</button>
+  <section class="panel" style="display:flex;flex-direction:column;gap:10px">
+    <div class="row"><h2 style="font-size:21px">${esc(d.title)}</h2><span class="chip">${d.level}</span></div>
+    <span class="muted" style="font-size:13px">${esc(d.scene)}。點任何一句可以單獨聽。</span>
+    <div class="pbtns"><button class="btn pri" data-p="all">整段播放</button><button class="btn ok" data-p="shadow">跟讀模式</button><button class="btn ghost" data-p="stop">停止</button></div>
+    <div class="row" style="font-size:14px"><label class="inl" for="hz"><input type="checkbox" id="hz" ${S.hideZh?"":"checked"}>顯示中文</label>
+      <label class="inl" for="sl"><input type="checkbox" id="sl" ${S.slowTalk?"checked":""}>慢速</label></div>
+    <div class="phint" id="phint" aria-live="polite"></div>
+  </section>
+  <div class="chat">${d.lines.map((l,i)=>`<button class="bub ${l[0]==="A"?"l":"r"}" data-line="${i}"><span class="who">${l[0]}</span><span class="en">${esc(l[1])}</span><span class="zh" ${S.hideZh?"hidden":""}>${esc(l[2])}</span></button>`).join("")}</div>`;
+  document.getElementById("sl").onchange=e=>{S.slowTalk=e.target.checked;save()};
+  app.onclick=e=>{if(e.target.closest("[data-back]"))return go({name:"talk"});
+    const p=e.target.closest("[data-p]");if(p){const m=p.dataset.p;if(m==="stop"){stopP();setHint("");return}return playDialog(d,m)}
+    const ln=e.target.closest("[data-line]");if(ln){stopP();try{speechSynthesis.cancel()}catch(e){}const i=+ln.dataset.line,vs=enVoices();hl(i);
+      say(d.lines[i][1],"en-US",S.slowTalk?.75:.95,d.lines[i][0]==="A"?vs[0]:(vs[1]||vs[0])).then(()=>{if(!P)hl(-1)})}}};
+
+// ---------- voice selection ----------
+const BADV=/Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Fred|Junior|Kathy|Ralph|Grandma|Grandpa|Eddy|Flo|Reed|Rocko|Sandy|Shelley/i;
+const GOODV=/Samantha|Ava|Allison|Susan|Zoe|Nicky|Evan|Tom|Aaron|Alex|Joelle|Noelle|Nathan|Google US English|Google UK English|Aria|Jenny|Guy|Libby|Sonia|Ryan/i;
+function vScore(v){return (/Premium|Enhanced|Natural|Neural|加強|高品質/i.test(v.name)?4:0)+(GOODV.test(v.name)?2:0)+(/en[-_]US/i.test(v.lang)?1:0)}
+function goodVoices(){try{return speechSynthesis.getVoices().filter(v=>/^en[-_]/i.test(v.lang)&&!BADV.test(v.name)).sort((a,b)=>vScore(b)-vScore(a))}catch(e){return[]}}
+function enVoice(){const g=goodVoices();return (S.voice&&g.find(v=>v.name===S.voice))||g[0]||null}
+function zhVoice(){try{const v=speechSynthesis.getVoices().filter(v=>/^zh/i.test(v.lang)&&!BADV.test(v.name));return v.find(x=>/TW/i.test(x.lang)&&/Mei|美佳/i.test(x.name))||v.find(x=>/TW/i.test(x.lang))||v.find(x=>/HK/i.test(x.lang))||v[0]||null}catch(e){return null}}
+try{speechSynthesis.onvoiceschanged=()=>{if(view&&view.name==="drive"&&!D)render()}}catch(e){}
+function voicePicker(){const g=goodVoices(),cur=enVoice();
+  return `<section class="panel" style="display:flex;flex-direction:column;gap:8px"><div class="field"><label for="vsel">朗讀聲音（英文）</label>
+    <select id="vsel">${g.length?g.map(v=>`<option value="${esc(v.name)}" ${cur&&v.name===cur.name?"selected":""}>${esc(v.name)}（${esc(v.lang)}）</option>`).join(""):"<option>使用系統預設聲音</option>"}</select></div>
+    <button class="btn ghost" data-vtest>試聽</button>
+    <p class="muted" style="margin:0;font-size:13px">聲音還是很機械的話：iPhone 可到「設定 → 輔助使用 → 朗讀內容 → 聲音 → 英文」下載「加強版」的 Ava 或 Samantha，下載後回來這裡選它。</p></section>`}
+document.addEventListener("change",e=>{if(e.target.id==="vsel"){S.voice=e.target.value;save();speak("Hello! This is my voice.")}});
+document.addEventListener("click",e=>{if(e.target.closest("[data-vtest]"))speak("Hello! Nice to meet you. How are you today?")});
+
+// ---------- read-aloud for quizzes ----------
+let RL=0;
+const hasZh=t=>/[\u4e00-\u9fff]/.test(t);
+function readQ(t){RL++;t=String(t).replace(/___/g," … ").replace(/→/g,". ");try{speechSynthesis.cancel()}catch(e){}
+  if(hasZh(t))say(t,"zh-TW",1);else say(t,"en-US",.9)}
+async function readList(arr){try{speechSynthesis.cancel()}catch(e){}const tok=++RL;
+  for(const o of arr){if(tok!==RL)return;await say(o,hasZh(o)?"zh-TW":"en-US",hasZh(o)?1:.9);if(tok!==RL)return;await wait(350)}}
+function qtools(q,opts){return `<div class="qtools"><button class="chipbtn" data-rq="${esc(q)}">${IC.spk}聽題目</button><button class="chipbtn" data-ro="${esc(JSON.stringify(opts))}">${IC.spk}聽選項</button>
+  <label class="inl sm" for="ar"><input type="checkbox" id="ar" ${S.autoRead!==false?"checked":""}>自動朗讀題目</label></div>`}
+document.addEventListener("click",e=>{const q=e.target.closest("[data-rq]");if(q)return readQ(q.dataset.rq);
+  const o=e.target.closest("[data-ro]");if(o){try{readList(JSON.parse(o.dataset.ro))}catch(err){}}});
+document.addEventListener("change",e=>{if(e.target.id==="ar"){S.autoRead=e.target.checked;save()}});
+
+render();
+</script>
+
+</body></html>
