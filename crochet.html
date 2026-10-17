@@ -664,23 +664,63 @@ function voiceApply(plus,minus,heard){
   for(let i=0;i<plus;i++)stitchMove(p,1);
   if(!plus&&!minus)render();
 }
-function voiceMode(){return view.vmode==='sound'?'sound':'words'}
+
+const CN={'零':0,'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
+function numTokens(text){
+  const out=[];const re=/[一二兩三四五六七八九]?十[一二三四五六七八九]?|[零一二兩三四五六七八九]|\d+/g;let m;
+  const t=String(text).replace(/下一圈|上一圈/g,'');
+  while((m=re.exec(t))){const w=m[0];
+    if(/^\d+$/.test(w)){out.push({d:w})}
+    else if(w.includes('十')){const [a,b]=w.split('十');out.push({v:(a?CN[a]:1)*10+(b?CN[b]:0)})}
+    else out.push({v:CN[w]});}
+  return out;
+}
+function tokenValue(tk,limit){
+  if(tk.v!=null)return tk.v;
+  const d=tk.d;if(+d<=limit)return +d;
+  if(d.length>=2&&+d.slice(-2)<=limit&&+d.slice(-2)>0)return +d.slice(-2);
+  return +d.slice(-1);
+}
+function countTo(tk){
+  const p=byId(S.projects,view.open);if(!p)return;
+  const {seq}=stepsFor(p);
+  if(seq){const len=seq.actions.length,done=Math.min(p.stitch||0,len);if(done>=len)return;
+    const a=seq.actions[done],sg=seq.steps[a.si],n=tokenValue(tk,sg.n);
+    if(!(n>a.i))return;const adv=Math.min(n-a.i,sg.n-a.i,6);for(let i=0;i<adv;i++)stitchMove(p,1);}
+  else{const cur=p.stitch||0,n=tokenValue(tk,999);if(n>cur&&n-cur<=6)for(let i=0;i<n-cur;i++)stitchMove(p,1);}
+}
+function voiceMode(){return ['sound','count'].includes(view.vmode)?view.vmode:'words'}
 function voiceStart(){
   if(!VOICE_OK)return;
   voice.err='';voice.on=true;
   if(voiceMode()==='sound'){soundStart();return}
-  const rec=new SR();rec.lang='zh-TW';rec.continuous=true;rec.interimResults=false;rec.maxAlternatives=1;
-  rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal){const tx=e.results[i][0].transcript,c=voiceCount(tx);voiceApply(c.plus,c.minus,tx)}}};
+  const counting=voiceMode()==='count';
+  const rec=new SR();rec.lang='zh-TW';rec.continuous=true;rec.interimResults=counting;rec.maxAlternatives=1;
+  const seen={};
+  rec.onresult=e=>{
+    if(counting){
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const tx=e.results[i][0].transcript,tks=numTokens(tx),pv=seen[i]||{idx:-1,raw:''};
+        const bk=(tx.match(/退/g)||[]).length,pb=seen['b'+i]||0;if(bk>pb){seen['b'+i]=bk;voiceApply(0,bk-pb,tx)}
+        if(!tks.length)continue;
+        const li=tks.length-1,lt=tks[li],raw=lt.d!=null?lt.d:String(lt.v);
+        if(li>pv.idx||(li===pv.idx&&raw!==pv.raw&&lt.d!=null)){seen[i]={idx:li,raw};voice.heard=tx.trim().slice(-12);countTo(lt)}
+      }
+      return;
+    }
+    for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal){const tx=e.results[i][0].transcript,c=voiceCount(tx);voiceApply(c.plus,c.minus,tx)}}
+  };
   rec.onerror=e=>{
     if(e.error==='not-allowed'||e.error==='service-not-allowed'){voice.on=false;voice.err='沒有麥克風權限。請到 Safari 的網站設定允許麥克風，再按一次「聲控」。';render()}
-    else if(e.error==='audio-capture'){voice.on=false;voice.err='找不到麥克風';render()}
+    else if(e.error==='audio-capture'){if(voice.snd){soundStop();voice.noMeter=true;voice.err='這支手機不能同時顯示音量條，已關掉音量條';render();return}voice.on=false;voice.err='找不到麥克風';render()}
   };
-  rec.onend=()=>{if(voice.on&&voice.rec===rec){setTimeout(()=>{if(voice.on&&voice.rec===rec){try{rec.start()}catch(err){}}},250)}};
+  rec.onend=()=>{if(voice.on&&voice.rec===rec){for(const k in seen)delete seen[k];setTimeout(()=>{if(voice.on&&voice.rec===rec){try{rec.start()}catch(err){}}},250)}};
   voice.rec=rec;
-  try{rec.start()}catch(err){voice.on=false;voice.err='聲控沒辦法啟動，請再按一次';}
+  try{rec.start()}catch(err){voice.on=false;voice.err='聲控沒辦法啟動，請再按一次';return}
+  if(!voice.noMeter)soundStart(true);
 }
 /* quick mode: any short sound (say "一" or tap the table) = +1, decided on the phone, no word recognition */
-async function soundStart(){
+async function soundStart(meterOnly){
   const AC=window.AudioContext||window.webkitAudioContext;
   let ctx=null;
   try{ctx=new AC();ctx.resume&&ctx.resume()}catch(e){}
@@ -690,7 +730,7 @@ async function soundStart(){
     if(!ctx)ctx=new AC();
     const src=ctx.createMediaStreamSource(stream),an=ctx.createAnalyser();an.fftSize=1024;src.connect(an);
     const buf=new Uint8Array(an.fftSize);let floor=0.004,armed=true,lastHit=0,quietSince=0,peak=0;
-    const state={stream,ctx,raf:0,timer:0};voice.snd=state;
+    const state={stream,ctx,raf:0,timer:0,meterOnly:!!meterOnly};voice.snd=state;
     const tick=()=>{
       if(!voice.on||voice.snd!==state)return;
       an.getByteTimeDomainData(buf);let sum=0;for(let i=0;i<buf.length;i++){const v=(buf[i]-128)/128;sum+=v*v}
@@ -699,16 +739,16 @@ async function soundStart(){
       const th=Math.max([0.03,0.015,0.008][sens-1],floor*[4,3,2.2][sens-1]);
       const now=performance.now();
       if(rms<th*0.7){floor=floor*0.98+rms*0.02;if(!quietSince)quietSince=now;if(now-quietSince>100)armed=true}else quietSince=0;
-      if(armed&&rms>th&&now-lastHit>250){armed=false;lastHit=now;voiceApply(1,0,'（聲音）')}
+      if(!meterOnly&&armed&&rms>th&&now-lastHit>250){armed=false;lastHit=now;voiceApply(1,0,'（聲音）')}
       peak=Math.max(rms,peak*0.9);
       const L=document.getElementById('lvl'),T=document.getElementById('thr');
       if(L)L.style.width=Math.min(100,peak/0.1*100)+'%';
-      if(T)T.style.left=Math.min(100,th/0.1*100)+'%';
+      if(T)T.style.left=meterOnly?'-10px':Math.min(100,th/0.1*100)+'%';
     };
     state.timer=setInterval(tick,20);
     if(ctx.state==='suspended'){try{await ctx.resume()}catch(e){}}
     render();
-  }catch(e){try{ctx&&ctx.close()}catch(x){}voice.on=false;voice.err=e&&e.name==='NotAllowedError'?'沒有麥克風權限。請到 Safari 的網站設定允許麥克風，再按一次「聲控」。':'快速模式沒辦法啟動（'+(e&&e.name||'未知')+'），請改用「說一」模式';render()}
+  }catch(e){try{ctx&&ctx.close()}catch(x){}if(meterOnly){voice.noMeter=true;render();return}voice.on=false;voice.err=e&&e.name==='NotAllowedError'?'沒有麥克風權限。請到 Safari 的網站設定允許麥克風，再按一次「聲控」。':'快速模式沒辦法啟動（'+(e&&e.name||'未知')+'），請改用「說一」模式';render()}
 }
 function soundStop(){const st=voice.snd;voice.snd=null;if(!st)return;clearInterval(st.timer);try{st.stream.getTracks().forEach(t=>t.stop())}catch(e){}try{st.ctx.close()}catch(e){}}
 function voiceStop(){voice.on=false;const r=voice.rec;voice.rec=null;voice.heard='';if(r){try{r.stop()}catch(e){}}soundStop()}
@@ -734,8 +774,8 @@ function focusView(p){
   }else{main=`<div class="fz-kind">針數</div><div class="fz-num">${p.stitch||0}${cur&&cur.count?`<small> / ${cur.count}</small>`:''}</div>`}
   return `<div class="focus">
     <div class="fz-top"><div><b>第 ${p.round} 圈</b><span>${esc(pat?partName(pat):p.name)}</span></div><div class="row">${VOICE_OK?`<button class="btn ${voice.on?'':'ghost'} micbtn" data-act="voice" aria-pressed="${voice.on}">${voice.on?'<i class="dot"></i> 聲控中':'🎤 聲控'}</button>`:''}<button class="btn ghost" data-act="focus-off">離開</button></div></div>
-    ${VOICE_OK?`<div class="vmodes"><button class="chip" data-act="vmode" data-m="words" aria-pressed="${voiceMode()==='words'}">說「一」</button><button class="chip" data-act="vmode" data-m="sound" aria-pressed="${voiceMode()==='sound'}">快速：有聲音就 +1</button>${voiceMode()==='sound'?`<button class="chip" data-act="vsens">靈敏度：${['低','中','高'][(view.vsens||2)-1]}</button>`:''}</div>`:''}
-    ${voice.on?`<div class="heard">${voiceMode()==='sound'?'說「一」、出聲或輕敲桌面都會 +1，反應最快；周圍安靜時最準':'說「一」＝ 加一針　說「退」＝ 退一針'}${voice.heard?`　·　剛剛：${esc(voice.heard)}`:''}</div>`:''}${voice.on&&voiceMode()==='sound'?`<div class="meter" aria-hidden="true"><i id="lvl"></i><b id="thr"></b></div><div class="heard" style="color:var(--muted)">出聲時綠條要超過紅線才會 +1，超不過就把靈敏度調高</div>`:''}${voice.err?`<div class="heard err">${esc(voice.err)}</div>`:''}
+    ${VOICE_OK?`<div class="vmodes"><button class="chip" data-act="vmode" data-m="words" aria-pressed="${voiceMode()==='words'}">說「一」</button><button class="chip" data-act="vmode" data-m="count" aria-pressed="${voiceMode()==='count'}">數數</button><button class="chip" data-act="vmode" data-m="sound" aria-pressed="${voiceMode()==='sound'}">快速：有聲音就 +1</button>${voiceMode()==='sound'?`<button class="chip" data-act="vsens">靈敏度：${['低','中','高'][(view.vsens||2)-1]}</button>`:''}</div>`:''}
+    ${voice.on?`<div class="heard">${voiceMode()==='sound'?'說「一」、出聲或輕敲桌面都會 +1，反應最快；周圍安靜時最準':voiceMode()==='count'?'邊鉤邊數「一、二、三…」，數到幾就是這段第幾針；每段重新從一數起':'說「一」＝ 加一針　說「退」＝ 退一針'}${voice.heard?`　·　剛剛：${esc(voice.heard)}`:''}</div>`:''}${voice.on&&(voiceMode()==='sound'||voice.snd)?`<div class="meter" aria-hidden="true"><i id="lvl"></i><b id="thr"></b></div><div class="heard" style="color:var(--muted)">${voiceMode()==='sound'?'出聲時綠條要超過紅線才會 +1，超不過就把靈敏度調高':'綠條會跟著你的聲音跳，代表手機有聽到'}</div>`:''}${voice.err?`<div class="heard err">${esc(voice.err)}</div>`:''}
     <button class="fz-tap ${done?'is-done':''}" data-act="stitch" data-d="1" aria-label="鉤好一針">${main}<span class="fz-sub">${sub}</span>${done?'':'<span class="fz-hint">點這裡任何地方 ＝ 鉤好一針</span>'}</button>
     <div class="fz-bot"><button class="btn ghost" data-act="stitch" data-d="-1">− 退一針</button><button class="btn" data-act="round" data-d="1">＋ 下一圈</button></div>
   </div>`;
