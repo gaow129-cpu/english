@@ -239,8 +239,27 @@ function migrate(){
   if(bp&&String(bp.text||'').includes(OLD_BAG_START)){bp.text=BAG_PATTERN;bp.notes=BAG_NOTES}
   const pj=S.projects&&S.projects.find(p=>p.id==='bag');
   if(pj&&String(pj.notes||'').includes('第 8 針減針'))pj.notes=PROJ_NOTES;
+  if(bp&&!S.patterns.find(p=>p.id==='bagstrap')){
+    bp.group='梯形托特包';bp.part='包身';bp.name='梯形托特包－包身';
+    const i=S.patterns.indexOf(bp);
+    S.patterns.splice(i+1,0,{id:'bagstrap',group:'梯形托特包',part:'包帶',name:'梯形托特包－包帶',cat:'包包',source:'小紅書圖解',photos:[],
+      notes:'包身引拔結束後再鉤。在兩側的正中間各掛一個記號扣（就是包身用的那兩個）。從記號扣往回數 9 針，在那一針接新線，跨過記號扣鉤 18 針。\n往返鉤：每行鉤完翻面，鎖 1 針（不算針數）再鉤下一行。\n第 7～14 行可以多鉤或少鉤，調整背帶長短。\n最後一行留長一點的線，把這 18 針縫到另一側記號扣兩邊的 18 針上。',
+      text:BAG_STRAP});
+  }
   S.v=2;
 }
+const BAG_STRAP=`1: 短針18（共18針）
+2: 減1、短針14、減1（共16針）
+3: 減1、短針12、減1（共14針）
+4: 減1、短針10、減1（共12針）
+5: 減1、短針8、減1（共10針）
+6: 減1、短針6、減1（共8針）
+7-14: 短針8（共8針）
+15: 加1、短針6、加1（共10針）
+16: 加1、短針8、加1（共12針）
+17: 加1、短針10、加1（共14針）
+18: 加1、短針12、加1（共16針）
+19: 加1、短針14、加1，留長線縫合（共18針）`;
 
 function uid(){return Math.random().toString(36).slice(2,9)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -279,7 +298,7 @@ function photoUrl(id){return PHOTOS[id]||('/_blob/'+encodeURIComponent(id))}
     S[k]=S[k]||[];const have=new Set(S[k].map(x=>x.id));
     for(const it of (sd[k]||[]))if(!have.has(it.id))S[k].push(it);
   }
-  S.seed1=1;try{localStorage.setItem('crochet-book',JSON.stringify(S))}catch(e){}
+  migrate();S.seed1=1;try{localStorage.setItem('crochet-book',JSON.stringify(S))}catch(e){}
 })();
 try{const v=localStorage.getItem('crochet-view');if(v)view={...view,...JSON.parse(v)}}catch(e){}
 
