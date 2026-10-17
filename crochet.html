@@ -1,0 +1,726 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>鉤織手帳</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: sidebar on wide screens, bottom tab bar on phones; linen paper ground, rose for "where you are", forest green for actions */
+:root{
+  --bg:#F2EDE6; --paper:#FBF8F4; --ink:#2C2420; --muted:#7B6F67; --line:#E3DAD0;
+  --rose:#AE5E66; --rose-soft:#F2E0DE; --green:#2E5140; --green-soft:#DCE6DE; --on-green:#FBF8F4;
+  --shadow:0 1px 2px rgba(60,40,30,.06),0 6px 18px rgba(60,40,30,.06);
+  --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1B1917; --paper:#25221F; --ink:#EEE6DC; --muted:#A99D92; --line:#3A3531;
+  --rose:#E19AA0; --rose-soft:#3D2B2C; --green:#93C2A4; --green-soft:#22322A; --on-green:#16201A;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1B1917; --paper:#25221F; --ink:#EEE6DC; --muted:#A99D92; --line:#3A3531;
+  --rose:#E19AA0; --rose-soft:#3D2B2C; --green:#93C2A4; --green-soft:#22322A; --on-green:#16201A;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--rose);outline-offset:2px}
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100%}
+.side{border-right:1px solid var(--line);padding:28px 16px;display:flex;flex-direction:column;gap:24px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px}
+.brand svg{flex:none}
+.brand b{font-family:var(--serif);font-size:20px;letter-spacing:.06em}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav button{display:flex;align-items:center;gap:12px;border:0;background:none;padding:10px 12px;border-radius:10px;color:var(--muted);text-align:left}
+.nav button[aria-current="page"]{background:var(--green-soft);color:var(--green);font-weight:500}
+.nav svg{width:20px;height:20px;flex:none}
+main{padding-block:32px 48px;padding-inline:clamp(16px,4vw,48px);min-width:0;max-width:960px;width:100%}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+h1{font-family:var(--serif);font-weight:700;font-size:28px;margin:0;text-wrap:balance;letter-spacing:.02em}
+h2{font-family:var(--serif);font-weight:700;font-size:19px;margin:0}
+.sub{color:var(--muted);font-size:13px;margin:2px 0 0}
+.btn{border:0;border-radius:10px;padding:10px 16px;background:var(--green);color:var(--on-green);font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:transparent;color:var(--rose);border:1px solid var(--rose)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:99px;padding:5px 14px;font-size:13px;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:var(--on-green)}
+.list{display:grid;gap:14px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.proj{display:grid;grid-template-columns:96px 1fr;overflow:hidden}
+.tile{min-height:120px;background-image:radial-gradient(rgba(255,255,255,.22) 1.6px,transparent 2.2px),radial-gradient(rgba(0,0,0,.18) 1.6px,transparent 2.2px);background-size:9px 8px,9px 8px;background-position:0 0,4.5px 4px}
+.pbody{padding:14px 16px;display:grid;gap:8px;min-width:0}
+.pill{display:inline-block;font-size:11px;letter-spacing:.08em;padding:1px 8px;border-radius:5px;background:var(--green-soft);color:var(--green);font-weight:500;justify-self:start}
+.pill.paused{background:var(--rose-soft);color:var(--rose)}
+.pill.done{background:var(--line);color:var(--muted)}
+.meta{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.stats{display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap}
+.stat small{display:block;font-size:11px;color:var(--muted);letter-spacing:.06em}
+.stat b{font-family:var(--serif);font-size:22px;color:var(--rose);font-variant-numeric:tabular-nums}
+.bar{height:5px;background:var(--line);border-radius:9px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green)}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.back{border:0;background:none;color:var(--muted);padding:0;margin-bottom:12px;font-size:14px}
+.counter{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cbox{padding:18px;text-align:center;display:grid;gap:10px}
+.cbox .lbl{font-size:12px;letter-spacing:.12em;color:var(--muted)}
+.cbox .num{font-family:var(--serif);font-size:56px;line-height:1;font-variant-numeric:tabular-nums}
+.cbox .num small{font-size:18px;color:var(--muted)}
+.pm{display:grid;grid-template-columns:1fr 1.6fr;gap:8px}
+.pm button{white-space:nowrap;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:12px 0;font-size:22px}
+.pm button.plus{background:var(--green);color:var(--on-green);border-color:var(--green)}
+.target{font-size:13px;color:var(--muted)}
+.target b{color:var(--rose)}
+.stepbox .kind{font-family:var(--serif);font-size:24px;font-weight:700;color:var(--green)}
+.stepbox .kind.dec{color:var(--rose)}
+.stepbox .kind small{font-size:13px;font-weight:400;margin-left:6px;color:var(--muted)}
+.stepbox .num.ok{color:var(--green)}
+.strip{margin-top:14px;padding:12px 14px;display:grid;gap:8px;overflow-x:auto}
+.srow{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.rlab{font-size:12px;color:var(--muted);width:34px;flex:none}
+.seg{font-size:13px;padding:3px 9px;border-radius:7px;border:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+.seg.dec{color:var(--rose)}
+.seg.past{opacity:.4;text-decoration:line-through}
+.seg.on{background:var(--green);border-color:var(--green);color:var(--on-green);font-weight:700}
+.seg.on.dec{background:var(--rose);border-color:var(--rose)}
+.parts{display:grid;gap:6px}
+.part{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:9px 12px;text-align:left}
+.part b{font-weight:500}
+.part span{color:var(--muted);font-size:13px;white-space:nowrap}
+.micbtn{white-space:nowrap}
+.micbtn .dot{width:9px;height:9px;border-radius:50%;background:var(--on-green);display:inline-block;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.micbtn .dot{animation:none}}
+.heard{font-size:13px;color:var(--green);text-align:center;margin-top:-6px}
+.heard.err{color:var(--rose)}
+.focus{display:flex;flex-direction:column}
+.fz-tap{flex:1;min-height:0}
+.focusbtn{width:100%;justify-content:center;margin-bottom:14px;background:var(--rose);color:var(--paper)}
+.focus{position:fixed;inset:0;z-index:15;background:var(--bg);display:grid;grid-template-rows:auto 1fr auto;gap:14px;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 16px)}
+.fz-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.fz-top b{font-family:var(--serif);font-size:22px;display:block}
+.fz-top span{color:var(--muted);font-size:13px}
+.fz-tap{border:2px solid var(--line);background:var(--paper);border-radius:22px;display:grid;place-content:center;justify-items:center;gap:10px;touch-action:manipulation;user-select:none;-webkit-user-select:none;padding:16px}
+.fz-tap:active{background:var(--green-soft)}
+.fz-tap.is-done{cursor:default}
+.fz-kind{font-family:var(--serif);font-size:clamp(34px,10vw,64px);font-weight:700;color:var(--green);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;justify-content:center}
+.fz-kind.dec{color:var(--rose)}
+.fz-kind small{font-size:16px;font-weight:400;color:var(--muted)}
+.fz-num{font-family:var(--serif);font-size:clamp(90px,30vw,180px);line-height:1;font-variant-numeric:tabular-nums}
+.fz-num small{font-size:.25em;color:var(--muted)}
+.fz-sub{color:var(--muted);font-size:15px;text-align:center}
+.fz-hint{color:var(--muted);font-size:12px;letter-spacing:.06em;margin-top:8px}
+.fz-bot{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}
+.fz-bot .btn{justify-content:center;padding:14px}
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.ph{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--line);max-width:100%}
+.ph img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
+.ph button{position:absolute;top:6px;right:6px;border:0;background:rgba(20,15,12,.62);color:#fff;border-radius:99px;font-size:12px;padding:2px 9px}
+.addph{border:1.5px dashed var(--muted);border-radius:10px;aspect-ratio:1;display:grid;place-items:center;color:var(--muted);font-size:13px;cursor:pointer;text-align:center;max-width:100%}
+.addph input{position:absolute;opacity:0;width:1px;height:1px}
+.thumb{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:9px;max-width:100%}
+.viewer{position:fixed;inset:0;background:rgba(10,8,6,.88);display:grid;place-items:center;z-index:25;padding:16px}
+.viewer img{max-height:88vh;border-radius:10px}
+.aistat{font-size:14px;color:var(--green);margin:0}
+.aistat.err{color:var(--rose)}
+.arr{color:var(--muted);font-size:12px}
+.now{padding:16px 18px;border-left:4px solid var(--rose);display:grid;gap:4px}
+.now .lbl{font-size:12px;color:var(--rose);letter-spacing:.1em;font-weight:500}
+.now p{margin:0;font-size:16px}
+.rounds{display:grid}
+.rd{display:grid;grid-template-columns:56px 1fr 52px;gap:10px;padding:10px 16px;border:0;border-top:1px solid var(--line);background:none;text-align:left;align-items:start}
+.rd:first-child{border-top:0}
+.rd .n{font-family:var(--serif);color:var(--muted);font-variant-numeric:tabular-nums}
+.rd .c{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px}
+.rd.done .t{color:var(--muted)}
+.rd.cur{background:var(--rose-soft)}
+.rd.cur .n,.rd.cur .c{color:var(--rose);font-weight:700}
+.sec{display:grid;gap:12px;margin-top:22px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.yarn{padding:16px;display:grid;gap:10px}
+.yhead{display:flex;gap:12px;align-items:center}
+.skein{width:44px;height:44px;border-radius:50%;flex:none;background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.18) 0 3px,transparent 3px 7px);border:1px solid var(--line)}
+dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0;font-size:13px}
+dt{color:var(--muted)}
+dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.edit{border:0;background:none;color:var(--green);font-size:13px;padding:0}
+.empty{padding:28px;text-align:center;color:var(--muted);display:grid;gap:10px;justify-items:center}
+.calc{padding:18px;display:grid;gap:12px}
+.calc .out{font-family:var(--serif);font-size:20px}
+.calc .out b{color:var(--rose)}
+label.f{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.f input,.f select,.f textarea{border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:9px 11px;width:100%;color:var(--ink)}
+.f textarea{min-height:180px;resize:vertical;font-size:14px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fields .wide{grid-column:1/-1}
+.sheet{position:fixed;inset:0;background:rgba(20,15,12,.45);display:grid;place-items:end center;z-index:20}
+.sheet>form{background:var(--paper);width:min(620px,100%);max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom,0px));display:grid;gap:16px}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:99px;font-size:13px;z-index:30}
+.sync{font-size:12px;color:var(--muted);padding:0 8px;margin-top:auto}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;flex-direction:row;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));border-right:0;border-top:1px solid var(--line);background:var(--paper);z-index:10}
+  .brand,.sync{display:none}
+  .nav{flex-direction:row;width:100%;justify-content:space-around}
+  .nav button{flex-direction:column;gap:2px;font-size:11px;padding:6px 8px}
+  main{padding-block:20px 110px}
+  h1{font-size:24px}
+  .cbox .num{font-size:46px}
+  .proj{grid-template-columns:72px 1fr}
+}
+@media (max-width:560px){.counter{grid-template-columns:1fr}}
+@media (max-width:420px){.fields{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="15" cy="19" r="11" fill="var(--rose)"/><path d="M7 15c5-3 11-3 16 0M5 20c6-3 14-3 20 1M8 26c5-3 11-3 15 0" stroke="var(--paper)" stroke-width="1.4" fill="none"/><path d="M24 3l5 26" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round"/><path d="M24 3c-2 0-2 3 0 3" stroke="var(--green)" stroke-width="2" fill="none"/></svg>
+      <b>鉤織手帳</b>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sync" id="sync">只存在這個瀏覽器</div>
+  </aside>
+  <main id="main"></main>
+</div>
+<div id="layer"></div>
+
+<script>
+const ICONS={
+ projects:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 8h14l-1.2 11.5a1.5 1.5 0 0 1-1.5 1.5H7.7a1.5 1.5 0 0 1-1.5-1.5Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
+ patterns:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9.3h16M4 14.6h16M9.3 4v16M14.6 4v16"/></svg>',
+ yarns:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M5 9c4 1 9 1 14-1M4.5 14c5 1 10 1 15-1M8 19.5c2-5 6-11 9-14"/></svg>',
+ swatches:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="6" width="16" height="12" rx="1.5"/><path d="M4 10h16M8 6v3M12 6v3M16 6v3"/></svg>'
+};
+const TABS=[['projects','作品'],['patterns','圖解'],['yarns','線材'],['swatches','樣片']];
+const STATUS={active:'進行中',paused:'暫停',finishing:'收尾',done:'完成'};
+
+const BAG_PATTERN=`1: 起針 36 針，從倒數第二針開始，包底第 1 圈（共72針）
+2: 包底第 2 圈（共76針）
+3: 包底第 3 圈（共84針）
+4: 包身開始 短針43 ×2（共86針）
+5: 短針7、減1、短針11、減1、短針12、減1、短針7 ×2（共80針）
+6-7: 短針40 ×2（共80針）
+8: 短針8、減1、短針9、減1、短針9、減1、短針8 ×2（共74針）
+9: 短針37 ×2（共74針）
+10: 短針9、減1、短針6、減1、短針7、減1、短針9 ×2（共68針）
+11-12: 短針34 ×2（共68針）
+13: 短針10、減1、短針10、減1、短針10 ×2（共64針）
+14-15: 短針32 ×2（共64針）
+16: 短針6、減1、短針16、減1、短針6 ×2（共60針）
+17: 短針30 ×2（共60針）
+18: 短針14、減1、短針14 ×2（共58針）
+19: 短針29 ×2（共58針）
+20: 短針13、減1、短針14 ×2（共56針）
+21: 短針13、減1、短針13 ×2，引拔結束（共54針）`;
+const OLD_BAG_START='5: 每片兩邊第 8 針減 1 針';
+const BAG_NOTES='記號扣掛在兩端 9 針的第 5 針（正中間）。從記號扣開始，每行是半圈的順序，「×2」代表另一半照做一次。減1＝短針 2 併 1。';
+const PROJ_NOTES='兩側各 9 針、前後片各 34 針，整圈 86 針。';
+
+/* "短針7、減1、短針11 ×2" -> steps + repeat */
+const KIND={'短':'短針','短針':'短針','減':'減針','減針':'減針','加':'加針','加針':'加針','中長針':'中長針','長針':'長針','鎖針':'鎖針','引拔':'引拔'};
+function parseSteps(text){
+  const steps=[];const re=/(中長針|長針|鎖針|引拔|短針|減針|加針|短|減|加)\s*(\d+)/g;let m;
+  while((m=re.exec(text))){steps.push({k:KIND[m[1]],n:+m[2]})}
+  if(!steps.length)return null;
+  const rep=+((text.match(/[×xX＊*]\s*(\d+)/)||[])[1])||1;
+  const actions=[];
+  for(let r=0;r<rep;r++)steps.forEach((s,si)=>{for(let i=0;i<s.n;i++)actions.push({r,si,i,w:s.k==='加針'?2:(s.k==='引拔'||s.k==='鎖針')?0:1})});
+  return {steps,rep,actions};
+}
+function migrate(){
+  const bp=S.patterns&&S.patterns.find(p=>p.id==='bagpattern');
+  if(bp&&String(bp.text||'').includes(OLD_BAG_START)){bp.text=BAG_PATTERN;bp.notes=BAG_NOTES}
+  const pj=S.projects&&S.projects.find(p=>p.id==='bag');
+  if(pj&&String(pj.notes||'').includes('第 8 針減針'))pj.notes=PROJ_NOTES;
+  S.v=2;
+}
+
+function uid(){return Math.random().toString(36).slice(2,9)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function parseRounds(text){
+  const out=[];
+  for(const line of String(text||'').split('\n')){
+    const m=line.trim().match(/^(\d+)\s*(?:[-~～到]\s*(\d+))?\s*[:：.、]?\s*(.*)$/);
+    if(!m)continue;
+    const a=+m[1],b=m[2]?+m[2]:a,body=m[3];
+    const cm=body.match(/[（(]\s*共?\s*(\d+)\s*[針vV]?\s*[)）]\s*$/);
+    const t=cm?body.slice(0,cm.index).trim():body.trim();
+    for(let n=a;n<=Math.min(b,a+200);n++)out.push({n,text:t,count:cm?+cm[1]:null});
+  }
+  return out.sort((x,y)=>x.n-y.n);
+}
+function defaults(){
+  const pid='bagpattern';
+  return {v:1,
+    patterns:[{id:pid,name:'梯形托特包',cat:'包包',source:'小紅書圖解',text:BAG_PATTERN,notes:BAG_NOTES}],
+    projects:[{id:'bag',name:'黑色梯形包',status:'active',patternId:pid,yarnId:'blackyarn',hook:'',color:'#2B2A2C',round:5,stitch:0,notes:PROJ_NOTES,updated:Date.now()}],
+    yarns:[{id:'blackyarn',name:'黑色包包線',weight:'',fiber:'',color:'#2B2A2C',qty:'',location:'',notes:'用在黑色梯形包'}],
+    swatches:[]
+  };
+}
+
+let assets=null, sample=null, canImages=false, imgMax=3;
+let S=null, view={tab:'projects',filter:'all',open:null,pattern:null}, store=null, saveTimer=null;
+try{const s=localStorage.getItem('crochet-book');if(s)S=JSON.parse(s)}catch(e){}
+if(!S)S=defaults();
+migrate();
+try{const v=localStorage.getItem('crochet-view');if(v)view={...view,...JSON.parse(v)}}catch(e){}
+
+function save(){
+  try{localStorage.setItem('crochet-book',JSON.stringify(S))}catch(e){}
+  try{localStorage.setItem('crochet-view',JSON.stringify(view))}catch(e){}
+  if(!store)return;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    try{await store.set({json:JSON.stringify(S),at:Date.now()});setSync('已同步到你的帳號')}
+    catch(e){setSync(e&&e.code==='quota_exceeded'?'空間已滿，資料只存在這台裝置':'同步失敗，資料先存在這台裝置')}
+  },700);
+}
+function setSync(t){document.getElementById('sync').textContent=t}
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.append(d);setTimeout(()=>d.remove(),1600)}
+
+const byId=(arr,id)=>arr.find(x=>x.id===id);
+function patternRounds(p){return p?parseRounds(p.text):[]}
+
+function render(){
+  document.getElementById('nav').innerHTML=TABS.map(([k,l])=>`<button data-tab="${k}" ${view.tab===k?'aria-current="page"':''}>${ICONS[k]}<span>${l}</span></button>`).join('');
+  const m=document.getElementById('main');
+  const op=view.tab==='projects'&&view.open&&byId(S.projects,view.open);
+  if(!op)view.focus=false;
+  if(op&&view.focus)m.innerHTML=focusView(op);
+  else if(view.tab==='projects')m.innerHTML=op?projectDetail(op):projectList();
+  else if(view.tab==='patterns')m.innerHTML=view.pattern&&byId(S.patterns,view.pattern)?patternDetail(byId(S.patterns,view.pattern)):patternList();
+  else if(view.tab==='yarns')m.innerHTML=yarnList();
+  else m.innerHTML=swatchList();
+  const cur=m.querySelector('.rd.cur');if(cur&&view._scroll){cur.scrollIntoView({block:'center'});view._scroll=false}
+  if(view.tab==='swatches')runCalc();
+}
+
+function projectList(){
+  const f=view.filter;
+  const items=S.projects.filter(p=>f==='all'||p.status===f).sort((a,b)=>(b.updated||0)-(a.updated||0));
+  const chips=[['all','全部'],['active','進行中'],['paused','暫停'],['finishing','收尾'],['done','完成']].map(([k,l])=>`<button class="chip" data-filter="${k}" aria-pressed="${f===k}">${l}</button>`).join('');
+  return `<div class="head"><div><h1>我的作品</h1><p class="sub">正在鉤、暫停中和完成的作品都在這裡</p></div><button class="btn" data-act="new-project">＋ 新作品</button></div>
+  <div class="chips">${chips}</div>
+  <div class="list">${items.length?items.map(projCard).join(''):`<div class="card empty">這個分類還沒有作品<button class="btn" data-act="new-project">＋ 新作品</button></div>`}</div>`;
+}
+function projCard(p){
+  const pat=byId(S.patterns,p.patternId), rs=patternRounds(pat), total=rs.length?rs[rs.length-1].n:(+p.total||0);
+  const pct=total?Math.min(100,Math.round(((p.status==='done'?total:p.round-1))/total*100)):0;
+  const y=byId(S.yarns,p.yarnId);
+  return `<article class="card proj">
+    <div class="tile" style="background-color:${esc(p.color||'#B9A89A')}${p.photos&&p.photos[0]?`;background-image:url('/_blob/${esc(p.photos[0])}');background-size:cover;background-position:center`:''}"></div>
+    <div class="pbody">
+      <span class="pill ${p.status==='paused'?'paused':p.status==='done'?'done':''}">${STATUS[p.status]||''}</span>
+      <h2>${esc(p.name)}</h2>
+      <div class="meta">${y?`<span>${esc(y.name)}</span>`:''}${p.hook?`<span>鉤針 ${esc(p.hook)} mm</span>`:''}${pat?`<span>${esc(pat.name)}</span>`:''}</div>
+      <div class="row"><div class="stats">
+        <div class="stat"><small>目前圈數</small><b>${p.round}</b></div>
+        ${total?`<div class="stat"><small>總圈數</small><b>${total}</b></div><div class="stat"><small>進度</small><b>${pct}%</b></div>`:''}
+      </div><button class="btn" data-open="${p.id}">繼續鉤</button></div>
+      ${total?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}
+    </div></article>`;
+}
+function projectDetail(p){
+  const pat=byId(S.patterns,p.patternId), rs=patternRounds(pat);
+  const cur=rs.find(r=>r.n===p.round), total=rs.length?rs[rs.length-1].n:(+p.total||0);
+  const y=byId(S.yarns,p.yarnId), seq=cur&&parseSteps(cur.text);
+  const sib=pat&&patternGroups().find(g=>g.items.includes(pat));
+  const partTabs=sib&&sib.items.length>1?`<div class="sec" style="margin:0 0 16px"><span class="hint">切換要鉤的部件（各部件的進度會分開記）</span><div class="chips" style="margin:0">${sib.items.map(x=>{const pr=(p.prog||{})[x.id];const last=lastRound(x);const fin=pr&&pr.round>last;
+    return `<button class="chip" data-act="switch-part" data-pid="${x.id}" aria-pressed="${x===pat}">${esc(partName(x))}${fin?' ✓':pr&&x!==pat?` · 第${pr.round}圈`:''}</button>`}).join('')}</div></div>`:'';
+  return `<button class="back" data-act="back">← 所有作品</button>
+  <div class="head"><div><h1>${esc(p.name)}</h1><p class="sub">${STATUS[p.status]}${y?' · '+esc(y.name):''}${p.hook?' · 鉤針 '+esc(p.hook)+' mm':''}</p></div>
+  <button class="btn ghost" data-act="edit-project" data-id="${p.id}">編輯</button></div>
+  ${partTabs}
+  <button class="btn focusbtn" data-act="focus-on">✋ 專心鉤模式：點螢幕任何地方 ＋1</button>
+  <div class="counter">
+    <div class="card cbox"><span class="lbl">圈數</span><div class="num">${p.round}${total?`<small> / ${total}</small>`:''}</div>
+      <div class="pm"><button data-act="round" data-d="-1" aria-label="上一圈">−</button><button class="plus" data-act="round" data-d="1" aria-label="下一圈">＋ 下一圈</button></div></div>
+    ${seq?stepBox(p,seq,cur):`<div class="card cbox"><span class="lbl">這圈針數</span><div class="num">${p.stitch||0}${cur&&cur.count?`<small> / ${cur.count}</small>`:''}</div>
+      <div class="pm"><button data-act="stitch" data-d="-1" aria-label="少一針">−</button><button class="plus" data-act="stitch" data-d="1" aria-label="多一針">＋1</button></div>
+      <button class="edit" data-act="stitch-reset">歸零</button></div>`}
+  </div>
+  ${seq?stepStrip(p,seq):''}
+  ${cur?`<div class="card now" style="margin-top:14px"><span class="lbl">第 ${cur.n} 圈要做的事</span><p>${esc(cur.text)}</p>${cur.count?`<span class="target">鉤完這圈應該有 <b>${cur.count}</b> 針</span>`:''}</div>`:''}
+  ${p.notes?`<div class="sec"><h2>筆記</h2><div class="card" style="padding:14px 16px;white-space:pre-wrap">${esc(p.notes)}</div></div>`:''}
+  ${photoSection('project',p)}
+  <div class="sec"><div class="row"><h2>${pat?esc(pat.name):'圖解'}</h2>${pat?`<span class="hint">點一圈可以直接跳過去</span>`:''}</div>
+  ${rs.length?`<div class="card rounds">${rs.map(r=>`<button class="rd ${r.n<p.round?'done':''} ${r.n===p.round?'cur':''}" data-act="goto" data-n="${r.n}"><span class="n">第${r.n}圈</span><span class="t">${esc(r.text)}</span><span class="c">${r.count??''}</span></button>`).join('')}</div>`
+  :`<div class="card empty">這個作品還沒連結圖解<button class="btn ghost" data-act="edit-project" data-id="${p.id}">選擇圖解</button></div>`}</div>`;
+}
+
+function stepBox(p,seq,cur){
+  const n=seq.actions.length, done=Math.min(p.stitch||0,n);
+  const out=k=>seq.actions.slice(0,k).reduce((t,x)=>t+x.w,0);
+  if(done>=n)return `<div class="card cbox stepbox"><span class="lbl">這圈完成</span><div class="num ok">✓</div>
+    <span class="target">共鉤了 <b>${out(n)}</b> 針${cur.count?`，應有 ${cur.count} 針`:''}</span>
+    <div class="pm"><button data-act="stitch" data-d="-1" aria-label="退一步">−</button><button class="plus" data-act="round" data-d="1">＋ 下一圈</button></div></div>`;
+  const a=seq.actions[done], s=seq.steps[a.si], nx=seq.actions[done+s.n-a.i];
+  const nextStep=nx?seq.steps[nx.si]:null;
+  return `<div class="card cbox stepbox"><span class="lbl">${seq.rep>1?`第 ${a.r+1} / ${seq.rep} 次 · `:''}現在要鉤</span>
+    <div class="kind ${s.k==='減針'?'dec':''}">${s.k}${s.k==='減針'?'<small>2 併 1</small>':s.k==='加針'?'<small>同一針鉤 2 針</small>':s.k==='鎖針'?'<small>不算進這圈針數</small>':''}</div>
+    <div class="num">${a.i+1}<small> / ${s.n}</small></div>
+    <span class="target">${nextStep?`接下來：${nextStep.k} ${nextStep.n}`:'這是這圈最後一段'} · 已鉤 ${out(done)} / ${out(n)} 針</span>
+    <div class="pm"><button data-act="stitch" data-d="-1" aria-label="退一針">−</button><button class="plus" data-act="stitch" data-d="1" aria-label="鉤好一針">＋1 鉤好了</button></div>
+    <button class="edit" data-act="stitch-reset">這圈重來</button></div>`;
+}
+function stepStrip(p,seq){
+  const n=seq.actions.length, done=Math.min(p.stitch||0,n), a=seq.actions[Math.min(done,n-1)];
+  const curR=done>=n?seq.rep:a.r;
+  let html='';
+  for(let r=0;r<seq.rep;r++){
+    html+=`<div class="srow">${seq.rep>1?`<span class="rlab">${r===0?'前半':'後半'}</span>`:''}${seq.steps.map((s,si)=>{
+      const st=r<curR||(r===curR&&si<a.si)||done>=n?'past':(r===curR&&si===a.si?'on':'');
+      return `<span class="seg ${st} ${s.k==='減針'?'dec':''}">${s.k} ${s.n}</span>`}).join('<span class="arr">›</span>')}</div>`;
+  }
+  return `<div class="card strip">${html}</div>`;
+}
+function patternList(){
+  return `<div class="head"><div><h1>圖解</h1><p class="sub">一行一圈，作品會照圈數顯示要做的事</p></div><div class="row">${sample&&canImages?'<button class="btn" data-act="ai-pattern">從照片做圖解</button>':''}<button class="btn ghost" data-act="new-pattern">＋ 手寫圖解</button></div></div>
+  <div class="grid2">${S.patterns.length?patternGroups().map(g=>g.items.length>1?groupCard(g):singleCard(g.items[0])).join('')
+  :`<div class="card empty">還沒有圖解<button class="btn" data-act="new-pattern">＋ 新增圖解</button></div>`}</div>`;
+}
+function partName(p){return p.part||(String(p.name).includes('－')?String(p.name).split('－').slice(1).join('－'):p.name)}
+function patternGroups(){
+  const map=new Map();
+  for(const p of S.patterns){const k=p.group||(String(p.name).includes('－')?String(p.name).split('－')[0]:'#'+p.id);
+    if(!map.has(k))map.set(k,{name:k.startsWith('#')?p.name:k,items:[]});map.get(k).items.push(p)}
+  return [...map.values()];
+}
+function lastRound(p){const rs=patternRounds(p);return rs.length?rs[rs.length-1].n:0}
+function singleCard(p){const used=S.projects.filter(x=>x.patternId===p.id).length;
+  return `<button class="card yarn" style="text-align:left" data-pattern="${p.id}">${p.photos&&p.photos[0]?`<img class="thumb" src="/_blob/${esc(p.photos[0])}" alt="">`:''}<span class="pill">${esc(p.cat||'圖解')}</span><h2>${esc(p.name)}</h2>
+   <div class="meta"><span>${lastRound(p)} 圈</span>${p.source?`<span>${esc(p.source)}</span>`:''}${used?`<span>${used} 個作品使用</span>`:''}</div></button>`}
+function groupCard(g){const f=g.items.find(x=>x.photos&&x.photos[0]);
+  return `<article class="card yarn">${f?`<img class="thumb" src="/_blob/${esc(f.photos[0])}" alt="" data-view="${esc(f.photos[0])}">`:''}<span class="pill">${esc(g.items[0].cat||'圖解')}</span><h2>${esc(g.name)}</h2>
+   <span class="sub">共 ${g.items.length} 個部件，各自分開鉤，點一個看圖解</span>
+   <div class="parts">${g.items.map(p=>`<button class="part" data-pattern="${p.id}"><b>${esc(partName(p))}</b><span>${lastRound(p)} 圈 ›</span></button>`).join('')}</div></article>`}
+function patternDetail(p){
+  const rs=patternRounds(p);
+  const sib=patternGroups().find(g=>g.items.includes(p));
+  const tabs=sib&&sib.items.length>1?`<div class="chips">${sib.items.map(x=>`<button class="chip" data-pattern="${x.id}" aria-pressed="${x===p}">${esc(partName(x))}</button>`).join('')}</div>`:'';
+  return `<button class="back" data-act="back-pattern">← 所有圖解</button>
+  <div class="head"><div>${tabs?`<p class="sub">${esc(sib.name)}</p><h1>${esc(partName(p))}</h1>`:`<h1>${esc(p.name)}</h1>`}<p class="sub">${esc(p.cat||'')}${p.source?' · '+esc(p.source):''}</p></div>
+  <div class="row"><button class="btn ghost" data-act="edit-pattern" data-id="${p.id}">編輯</button><button class="btn" data-act="start-from" data-id="${p.id}">用這份開始鉤</button></div></div>
+  ${tabs}
+  ${p.notes?`<div class="card now" style="border-left-color:var(--green)"><span class="lbl" style="color:var(--green)">重點</span><p>${esc(p.notes)}</p></div>`:''}
+  ${photoSection('pattern',p)}
+  <div class="sec"><div class="card rounds">${rs.map(r=>`<div class="rd"><span class="n">第${r.n}圈</span><span class="t">${esc(r.text)}</span><span class="c">${r.count??''}</span></div>`).join('')||'<div class="empty">沒有讀到圈數，請在每行開頭寫圈數，例如「5: 說明（共78針）」</div>'}</div></div>`;
+}
+
+function yarnList(){
+  return `<div class="head"><div><h1>線材</h1><p class="sub">記下手邊每一款線放在哪、還剩多少</p></div><button class="btn" data-act="new-yarn">＋ 新增線材</button></div>
+  <div class="grid2">${S.yarns.length?S.yarns.map(y=>{const used=S.projects.filter(p=>p.yarnId===y.id).map(p=>p.name);
+  return `<article class="card yarn"><div class="yhead"><span class="skein" style="background-color:${esc(y.color||'#C9B8A8')}"></span><div style="min-width:0"><h2>${esc(y.name)}</h2><span class="sub">${esc(y.weight||'粗細未填')}</span></div></div>
+  <dl>${[['材質',y.fiber],['數量',y.qty],['放在',y.location],['用在',used.join('、')],['備註',y.notes]].filter(r=>r[1]).map(r=>`<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join('')}</dl>
+  <button class="edit" style="justify-self:start" data-act="edit-yarn" data-id="${y.id}">編輯</button></article>`}).join('')
+  :`<div class="card empty">還沒有線材<button class="btn" data-act="new-yarn">＋ 新增線材</button></div>`}</div>`;
+}
+
+function swatchList(){
+  const opts=S.swatches.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  return `<div class="head"><div><h1>密度樣片</h1><p class="sub">量 10 公分有幾針幾圈，換線換針前先比一比</p></div><button class="btn" data-act="new-swatch">＋ 新增樣片</button></div>
+  <div class="card calc"><h2>尺寸換算</h2>
+   ${S.swatches.length?`<div class="fields"><label class="f">用哪片樣片<select id="c-sw">${opts}</select></label><label class="f">想要的寬度（cm）<input id="c-w" type="number" inputmode="decimal" value="30"></label><label class="f">想要的高度（cm）<input id="c-h" type="number" inputmode="decimal" value="20"></label></div><div class="out" id="c-out"></div>`
+   :`<p class="hint">新增一片樣片後，輸入想要的尺寸就能算出要起幾針、鉤幾圈。</p>`}
+  </div>
+  <div class="sec grid2">${S.swatches.map(s=>{const y=byId(S.yarns,s.yarnId);return `<article class="card yarn"><h2>${esc(s.name)}</h2>
+   <dl>${[['線材',y&&y.name],['鉤針',s.hook&&s.hook+' mm'],['針法',s.stitch],['每 10 cm',(s.sts||s.rows)?`${s.sts||'?'} 針 × ${s.rows||'?'} 圈`:''],['狀態',s.state],['備註',s.notes]].filter(r=>r[1]).map(r=>`<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join('')}</dl>
+   <button class="edit" style="justify-self:start" data-act="edit-swatch" data-id="${s.id}">編輯</button></article>`}).join('')}</div>`;
+}
+function runCalc(){
+  const o=document.getElementById('c-out');if(!o)return;
+  const s=byId(S.swatches,document.getElementById('c-sw').value);const w=+document.getElementById('c-w').value,h=+document.getElementById('c-h').value;
+  if(!s||!(+s.sts)){o.innerHTML='<span class="hint">這片樣片還沒填每 10 公分的針數</span>';return}
+  const st=Math.round(+s.sts/10*w), rw=s.rows?Math.round(+s.rows/10*h):null;
+  o.innerHTML=`起 <b>${st||0}</b> 針${rw!=null?`，鉤 <b>${rw}</b> 圈`:''}`;
+}
+
+/* ---------- forms ---------- */
+const yarnOpts=()=>[['','（不指定）'],...S.yarns.map(y=>[y.id,y.name])];
+const FORMS={
+ project:()=>[['name','作品名稱','text','wide'],['status','狀態','select','',Object.entries(STATUS)],['patternId','圖解','select','',[['','（不連結）'],...S.patterns.map(p=>{const g=patternGroups().find(x=>x.items.includes(p));return [p.id,g&&g.items.length>1?`${g.name}｜${partName(p)}`:p.name]})]],
+   ['yarnId','線材','select','',yarnOpts()],['hook','鉤針（mm）','text'],['round','目前圈數','number'],['total','總圈數（沒圖解時填）','number'],['color','代表色','color'],['notes','筆記','textarea','wide']],
+ pattern:()=>[['name','圖解名稱','text','wide'],['cat','分類','text'],['source','來源','text'],['notes','重點提醒','text','wide'],['text','每圈說明','textarea','wide']],
+ yarn:()=>[['name','名稱','text','wide'],['weight','粗細','text'],['fiber','材質','text'],['qty','數量','text'],['location','放在哪','text'],['color','顏色','color'],['notes','備註','textarea','wide']],
+ swatch:()=>[['name','樣片名稱','text','wide'],['yarnId','線材','select','',yarnOpts()],['hook','鉤針（mm）','text'],['stitch','針法','text'],['sts','10 cm 針數','number'],['rows','10 cm 圈數','number'],['state','狀態','select','',[['未洗','未洗'],['已洗已定型','已洗已定型']].map(([a,b])=>[a,b])],['notes','備註','textarea','wide']]
+};
+const COLL={project:'projects',pattern:'patterns',yarn:'yarns',swatch:'swatches'};
+const TITLES={project:'作品',pattern:'圖解',yarn:'線材',swatch:'樣片'};
+function openForm(kind,item){
+  const isNew=!item; item=item||{};
+  const fields=FORMS[kind]();
+  const html=fields.map(([k,l,t,cls,opts])=>{
+    const v=item[k]??(t==='color'?'#B9A89A':k==='status'?'active':k==='round'?1:'');
+    let ctl;
+    if(t==='select')ctl=`<select id="f-${k}" name="${k}">${opts.map(([a,b])=>`<option value="${esc(a)}" ${String(a)===String(v)?'selected':''}>${esc(b)}</option>`).join('')}</select>`;
+    else if(t==='textarea')ctl=`<textarea id="f-${k}" name="${k}" ${k==='text'?'placeholder="5: 短針7、減1、短針11 ×2（共80針）\n6-7: 短針40 ×2（共80針）"':''}>${esc(v)}</textarea>`;
+    else ctl=`<input id="f-${k}" name="${k}" type="${t}" ${t==='number'?'inputmode="numeric"':''} value="${esc(v)}">`;
+    return `<label class="f ${cls||''}">${l}${ctl}${k==='text'?'<span class="hint">一行一圈，開頭寫圈數，多圈相同可寫「6-7:」。照「短針7、減1、短針11 ×2（共80針）」的寫法，鉤的時候會一針一針帶你走；×2 代表整段做兩次，括號裡是這圈總針數。</span>':''}</label>`;
+  }).join('');
+  const L=document.getElementById('layer');
+  L.innerHTML=`<div class="sheet" data-close><form id="sheet-form"><div class="row"><h2>${isNew?'新增':'編輯'}${TITLES[kind]}</h2><button type="button" class="edit" data-close>取消</button></div>
+   <div class="fields">${html}</div>
+   <div class="row">${isNew?'<span></span>':`<button type="button" class="btn danger" id="del">刪除</button>`}<button class="btn" type="submit">儲存</button></div></form></div>`;
+  const form=document.getElementById('sheet-form');
+  form.querySelector('input,textarea')?.focus();
+  form.onsubmit=e=>{
+    e.preventDefault();
+    const d=Object.fromEntries(new FormData(form));
+    if(!String(d.name||'').trim()){form.querySelector('[name=name]').focus();toast('請先填名稱');return}
+    if(kind==='project'){d.round=Math.max(1,+d.round||1);d.updated=Date.now();if(isNew)d.stitch=0}
+    const arr=S[COLL[kind]];
+    if(isNew){d.id=uid();arr.unshift(d);if(kind==='project'){view.tab='projects';view.open=d.id}}
+    else Object.assign(item,d);
+    closeForm();save();render();toast('已儲存');
+  };
+  const del=document.getElementById('del');
+  if(del)del.onclick=()=>{
+    if(!del.dataset.armed){del.dataset.armed=1;del.textContent='再按一次刪除';return}
+    const arr=S[COLL[kind]];arr.splice(arr.indexOf(item),1);
+    if(kind==='project')view.open=null; if(kind==='pattern')view.pattern=null;
+    closeForm();save();render();toast('已刪除');
+  };
+}
+function closeForm(){document.getElementById('layer').innerHTML=''}
+
+
+function photoSection(kind,item){
+  const ph=item.photos||[];
+  if(!ph.length&&!assets)return '';
+  return `<div class="sec"><h2>參考照片</h2><div class="photos">${ph.map(id=>`<div class="ph"><img src="/_blob/${esc(id)}" alt="參考照片" data-view="${esc(id)}">${assets?`<button data-act="rm-photo" data-kind="${kind}" data-id="${item.id}" data-ph="${esc(id)}">移除</button>`:''}</div>`).join('')}
+  ${assets?`<label class="addph">＋ 上傳照片<input type="file" accept="image/*" id="up-${kind}-${item.id}" data-upload="${kind}" data-id="${item.id}"></label>`:''}</div></div>`;
+}
+async function shrink(file,max){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});
+    const sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+    const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    return await new Promise(r=>c.toBlob(r,'image/jpeg',.85));
+  }finally{URL.revokeObjectURL(url)}
+}
+const ASSET_MSG={quota_exceeded:'照片空間已滿，請先移除幾張',too_large:'照片太大了',unsupported_type:'這種檔案不能上傳',not_granted:'沒有允許上傳照片'};
+async function uploadPhoto(blob){
+  const r=await assets.upload(blob,{contentType:'image/jpeg'});
+  return r.id;
+}
+function openAiForm(){
+  const L=document.getElementById('layer');
+  L.innerHTML=`<div class="sheet" data-close><form id="ai-form"><div class="row"><h2>從照片做圖解</h2><button type="button" class="edit" data-close>取消</button></div>
+   <p class="hint">上傳成品照片（最多 ${imgMax} 張，正面、背面、打開的樣子都拍更準）。Claude 會把它拆成幾個部件，每個部件各寫一份逐針圖解。這是照片推算的初版，鉤幾圈後可能需要微調。</p>
+   <div class="fields">
+    <label class="f wide">成品照片<input id="ai-photo" type="file" accept="image/*" multiple></label>
+    <label class="f">想要的大小<input id="ai-size" placeholder="例如：寬 15 公分"></label>
+    <label class="f">線和鉤針<input id="ai-yarn" placeholder="例如：中粗毛線、4mm 鉤針"></label>
+    <label class="f wide">其他想法<input id="ai-extra" placeholder="例如：只用短針、不要填充棉"></label>
+   </div>
+   <p class="aistat" id="ai-stat" hidden></p>
+   <div class="row"><span></span><button class="btn" type="submit" id="ai-go">開始做圖解</button></div></form></div>`;
+  const form=document.getElementById('ai-form'),stat=document.getElementById('ai-stat'),go=document.getElementById('ai-go');
+  let ctrl=null;
+  form.onsubmit=async e=>{
+    e.preventDefault();
+    if(ctrl){ctrl.abort();return}
+    const files=[...document.getElementById('ai-photo').files].slice(0,imgMax);
+    if(!files.length){toast('請先選照片');return}
+    const size=document.getElementById('ai-size').value.trim(),yarn=document.getElementById('ai-yarn').value.trim(),extra=document.getElementById('ai-extra').value.trim();
+    stat.hidden=false;stat.className='aistat';stat.textContent='正在看照片、拆部件、算針數，大約需要一兩分鐘…';
+    go.textContent='停止';ctrl=new AbortController();
+    try{
+      const blobs=[];for(const f of files)blobs.push(await shrink(f,1280));
+      const prompt=`你是鉤針圖解設計師。請看照片中的鉤織成品（共 ${blobs.length} 張，都是同一件作品），為使用者設計一份可以照著鉤的圖解，全部用繁體中文。使用者主要會短針。
+使用者的條件：成品大小：${size||'依照片判斷'}；線與鉤針：${yarn||'中粗毛線、5mm 鉤針，密度約每 10 公分 16 針 18 圈'}；其他：${extra||'無'}。
+請依這個大小和密度算針數，把成品拆成要分開鉤的部件（例如包身、蓋子、耳朵、嘴巴），每個部件各寫一份逐圈圖解。
+每一圈一行，格式必須是「圈數: 步驟（共N針）」。步驟只能用這些寫法，用頓號分開：鎖針N、短針N、加N（同一針鉤 2 針，做 N 次）、減N（短針 2 併 1，做 N 次）、引拔N；一整段要重複時寫在最後，如「×6」。連續幾圈相同可以寫「6-8:」。
+範例：
+1: 環形起針 短針6（共6針）
+2: 加1 ×6（共12針）
+3: 短針1、加1 ×6（共18針）
+4-8: 短針18（共18針）
+每一行的步驟加總一定要等於括號裡的針數（加N 算 2N 針、減N 算 N 針），寫完請逐行檢查。長方形或橢圓的底可以用鎖針起針，在那一行寫清楚從哪一針開始。
+只回傳 JSON，不要任何其他文字：
+{"name":"作品名稱","cat":"分類","notes":"需要的材料、五金、組裝與縫合順序","parts":[{"name":"部件名稱","notes":"要鉤幾個、顏色、填不填棉","text":"1: ...\\n2: ..."}]}`;
+      const r=await sample.json(prompt,{images:blobs,modelTier:'complex',signal:ctrl.signal,cache:false});
+      const parts=(r&&Array.isArray(r.parts)?r.parts:[]).filter(x=>x&&x.text&&parseRounds(x.text).length);
+      if(!parts.length)throw {code:'bad_output'};
+      stat.textContent='圖解寫好了，正在存照片…';
+      let ids=[];
+      if(assets){for(const b of blobs){try{ids.push(await uploadPhoto(b))}catch(err){}}}
+      const name=String(r.name||'照片作品').slice(0,40);
+      const made=parts.map((x,i)=>({id:uid(),group:name,part:String(x.name||'部件'+(i+1)).slice(0,20),name:`${name}－${String(x.name||'部件'+(i+1)).slice(0,20)}`,cat:String(r.cat||'作品').slice(0,12),source:'照片推算的初版',
+        notes:[i===0&&r.notes?'整體：'+r.notes:'',x.notes||''].filter(Boolean).join('\n'),text:String(x.text),photos:ids.slice()}));
+      S.patterns.unshift(...made);
+      view.tab='patterns';view.pattern=made[0].id;
+      closeForm();save();render();window.scrollTo(0,0);toast(`做好了 ${made.length} 份圖解`);
+    }catch(err){
+      const c=err&&err.code;
+      if(c==='cancelled'){stat.textContent='已停止';}
+      else{stat.className='aistat err';stat.textContent=
+        c==='not_granted'?'需要允許這個頁面使用 Claude 才能做圖解':
+        c==='rate_limited'?'用得太頻繁了，請過幾分鐘再試':
+        c==='images_unavailable'||c==='image_rejected'?'這張照片沒辦法傳送，請換一張 JPG 或 PNG 試試':
+        c==='bad_output'?'這次沒有寫出能用的圖解，請換角度更清楚的照片再試一次':
+        '沒有成功，請稍後再試一次';}
+    }finally{ctrl=null;go.textContent='開始做圖解'}
+  };
+}
+function viewPhoto(id){
+  const L=document.getElementById('layer');
+  L.innerHTML=`<div class="viewer" data-close><img src="/_blob/${esc(id)}" alt="參考照片" data-close></div>`;
+}
+document.addEventListener('change',async e=>{
+  const inp=e.target;if(!inp.dataset||!inp.dataset.upload||!assets)return;
+  const f=inp.files&&inp.files[0];if(!f)return;
+  const coll=S[COLL[inp.dataset.upload]],item=byId(coll,inp.dataset.id);if(!item)return;
+  toast('上傳中…');
+  try{const blob=await shrink(f,1600);const id=await uploadPhoto(blob);item.photos=[...(item.photos||[]),id];save();render();toast('照片已加上')}
+  catch(err){toast(ASSET_MSG[err&&err.code]||'上傳失敗，請再試一次')}
+});
+document.addEventListener('click',e=>{
+  const v=e.target.closest('[data-view]');if(v){viewPhoto(v.dataset.view);return}
+  const t=e.target.closest('button,[data-close]');if(!t)return;
+  if(t.hasAttribute('data-close')&&(t.tagName==='BUTTON'||e.target===t)){closeForm();return}
+  if(t.dataset.tab){view.tab=t.dataset.tab;view.open=null;view.pattern=null;save();render();window.scrollTo(0,0);return}
+  if(t.dataset.filter){view.filter=t.dataset.filter;save();render();return}
+  if(t.dataset.open){view.open=t.dataset.open;view._scroll=true;save();render();window.scrollTo(0,0);return}
+  if(t.dataset.pattern){view.pattern=t.dataset.pattern;save();render();window.scrollTo(0,0);return}
+  const a=t.dataset.act, p=byId(S.projects,view.open);
+  if(a==='back'){view.open=null;save();render();return}
+  if(a==='back-pattern'){view.pattern=null;save();render();return}
+  if(a==='round'&&p){p.round=Math.max(1,p.round+ +t.dataset.d);p.stitch=0;p.updated=Date.now();
+    const rs=patternRounds(byId(S.patterns,p.patternId));if(rs.length&&p.round>rs[rs.length-1].n&&p.status!=='done'){p.status='finishing'}
+    view._scroll=true;save();render();return}
+  if(a==='stitch'&&p){stitchMove(p,+t.dataset.d);return}
+  if(a==='focus-on'){view.focus=true;save();render();wake(true);return}
+  if(a==='focus-off'){voiceStop();view.focus=false;save();render();wake(false);return}
+  if(a==='voice'){voice.on?voiceStop():voiceStart();render();return}
+  if(a==='switch-part'&&p){
+    const to=t.dataset.pid;if(to===p.patternId)return;
+    p.prog=p.prog||{};p.prog[p.patternId]={round:p.round,stitch:p.stitch||0};
+    const nx=p.prog[to]||{round:1,stitch:0};p.patternId=to;p.round=nx.round;p.stitch=nx.stitch;p.updated=Date.now();
+    if(p.status==='finishing')p.status='active';
+    view._scroll=true;save();render();window.scrollTo(0,0);toast('換到「'+partName(byId(S.patterns,to))+'」');return}
+  if(a==='stitch-reset'&&p){p.stitch=0;save();render();return}
+  if(a==='goto'&&p){p.round=+t.dataset.n;p.stitch=0;p.updated=Date.now();save();render();return}
+  if(a==='new-project')return openForm('project');
+  if(a==='edit-project')return openForm('project',byId(S.projects,t.dataset.id));
+  if(a==='new-pattern')return openForm('pattern');
+  if(a==='ai-pattern')return openAiForm();
+  if(a==='rm-photo'){
+    if(!t.dataset.armed){t.dataset.armed=1;t.textContent='確定移除？';return}
+    const item=byId(S[COLL[t.dataset.kind]],t.dataset.id);if(!item)return;
+    const ph=t.dataset.ph;item.photos=(item.photos||[]).filter(x=>x!==ph);
+    const stillUsed=[...S.projects,...S.patterns].some(x=>(x.photos||[]).includes(ph));
+    if(!stillUsed&&assets)assets.delete(ph).catch(()=>{});
+    save();render();return}
+  if(a==='edit-pattern')return openForm('pattern',byId(S.patterns,t.dataset.id));
+  if(a==='start-from'){const pt=byId(S.patterns,t.dataset.id);const g=patternGroups().find(x=>x.items.includes(pt));const np={id:uid(),name:g&&g.items.length>1?g.name:pt.name,status:'active',patternId:pt.id,yarnId:'',hook:'',color:'#B9A89A',round:1,stitch:0,notes:'',updated:Date.now()};
+    S.projects.unshift(np);view.tab='projects';view.pattern=null;view.open=np.id;save();render();toast('已建立新作品');return}
+  if(a==='new-yarn')return openForm('yarn');
+  if(a==='edit-yarn')return openForm('yarn',byId(S.yarns,t.dataset.id));
+  if(a==='new-swatch')return openForm('swatch');
+  if(a==='edit-swatch')return openForm('swatch',byId(S.swatches,t.dataset.id));
+});
+document.addEventListener('input',e=>{if(['c-sw','c-w','c-h'].includes(e.target.id))runCalc()});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){if(document.getElementById('layer').innerHTML)closeForm();else if(view.focus){view.focus=false;save();render();wake(false)}return}
+  if(document.getElementById('layer').innerHTML)return;
+  const tg=e.target;if(tg&&/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))return;
+  const p=view.tab==='projects'&&byId(S.projects,view.open);if(!p)return;
+  const fwd=[' ','Enter','ArrowRight','ArrowDown','PageDown','MediaTrackNext','AudioVolumeUp'],back=['ArrowLeft','ArrowUp','PageUp','Backspace','MediaTrackPrevious','AudioVolumeDown'];
+  if(fwd.includes(e.key)){e.preventDefault();if(!e.repeat)stitchMove(p,1)}
+  else if(back.includes(e.key)){e.preventDefault();if(!e.repeat)stitchMove(p,-1)}
+});
+function stepsFor(p){const pat=byId(S.patterns,p.patternId),cur=patternRounds(pat).find(r=>r.n===p.round);return {cur,seq:cur&&parseSteps(cur.text)}}
+function stitchMove(p,d){
+  const {seq}=stepsFor(p);const max=seq?seq.actions.length:Infinity;
+  const was=p.stitch||0;let nv=Math.max(0,Math.min(max,was+d));
+  if(nv===was){if(d>0&&seq)toast('這圈完成了，按「下一圈」');return}
+  p.stitch=nv;save();render();
+  try{if(d>0&&navigator.vibrate)navigator.vibrate(nv===max?[30,60,30]:15)}catch(e){}
+}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const VOICE_OK=!!SR&&!window.claude;
+const voice={on:false,rec:null,heard:'',err:''};
+const YI=/[一1１壹依衣醫伊揖]/g, BACK=/退|倒/g;
+function voiceHear(text){
+  const p=byId(S.projects,view.open);if(!p)return;
+  let t=String(text).replace(/\s+/g,'').replace(/下一圈|上一圈/g,'');
+  const plus=(t.match(YI)||[]).length, minus=(t.match(BACK)||[]).length;
+  voice.heard=text.trim().slice(-12);
+  for(let i=0;i<minus;i++)stitchMove(p,-1);
+  for(let i=0;i<plus;i++)stitchMove(p,1);
+  if(!plus&&!minus)render();
+}
+function voiceStart(){
+  if(!VOICE_OK)return;
+  voice.err='';voice.on=true;
+  const rec=new SR();rec.lang='zh-TW';rec.continuous=true;rec.interimResults=false;rec.maxAlternatives=1;
+  rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)voiceHear(e.results[i][0].transcript)}};
+  rec.onerror=e=>{
+    if(e.error==='not-allowed'||e.error==='service-not-allowed'){voice.on=false;voice.err='沒有麥克風權限。請到 Safari 的網站設定允許麥克風，再按一次「聲控」。';render()}
+    else if(e.error==='audio-capture'){voice.on=false;voice.err='找不到麥克風';render()}
+  };
+  rec.onend=()=>{if(voice.on&&voice.rec===rec){setTimeout(()=>{if(voice.on&&voice.rec===rec){try{rec.start()}catch(err){}}},250)}};
+  voice.rec=rec;
+  try{rec.start()}catch(err){voice.on=false;voice.err='聲控沒辦法啟動，請再按一次';}
+}
+function voiceStop(){voice.on=false;const r=voice.rec;voice.rec=null;voice.heard='';if(r){try{r.stop()}catch(e){}}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&voice.on){voiceStop();render()}});
+let wakeLock=null;
+async function wake(on){
+  try{
+    if(on&&navigator.wakeLock&&document.visibilityState==='visible'){wakeLock=await navigator.wakeLock.request('screen')}
+    else if(!on&&wakeLock){await wakeLock.release();wakeLock=null}
+  }catch(e){wakeLock=null}
+}
+document.addEventListener('visibilitychange',()=>{if(view.focus&&document.visibilityState==='visible')wake(true)});
+function focusView(p){
+  const {cur,seq}=stepsFor(p);const pat=byId(S.patterns,p.patternId);
+  let main,sub='',done=false;
+  if(seq){
+    const n=seq.actions.length,k=Math.min(p.stitch||0,n);
+    const out=x=>seq.actions.slice(0,x).reduce((t,y)=>t+y.w,0);
+    if(k>=n){done=true;main=`<div class="fz-kind ok">✓ 這圈完成</div><div class="fz-num">${out(n)}<small> 針</small></div>`;sub='按下方「＋ 下一圈」繼續';}
+    else{const a=seq.actions[k],s=seq.steps[a.si],nx=seq.actions[k+s.n-a.i],ns=nx?seq.steps[nx.si]:null;
+      main=`<div class="fz-kind ${s.k==='減針'?'dec':''}">${s.k}${s.k==='減針'?'<small>2 併 1</small>':s.k==='加針'?'<small>同一針 2 針</small>':''}</div><div class="fz-num">${a.i+1}<small> / ${s.n}</small></div>`;
+      sub=`${seq.rep>1?`第 ${a.r+1}/${seq.rep} 次 · `:''}${ns?`接下來 ${ns.k} ${ns.n}`:'最後一段'} · 已鉤 ${out(k)}/${out(n)}`;}
+  }else{main=`<div class="fz-kind">針數</div><div class="fz-num">${p.stitch||0}${cur&&cur.count?`<small> / ${cur.count}</small>`:''}</div>`}
+  return `<div class="focus">
+    <div class="fz-top"><div><b>第 ${p.round} 圈</b><span>${esc(pat?partName(pat):p.name)}</span></div><div class="row">${VOICE_OK?`<button class="btn ${voice.on?'':'ghost'} micbtn" data-act="voice" aria-pressed="${voice.on}">${voice.on?'<i class="dot"></i> 聲控中':'🎤 聲控'}</button>`:''}<button class="btn ghost" data-act="focus-off">離開</button></div></div>
+    ${voice.on?`<div class="heard">說「一」＝ 加一針　說「退」＝ 退一針${voice.heard?`　·　剛剛聽到：${esc(voice.heard)}`:''}</div>`:''}${voice.err?`<div class="heard err">${esc(voice.err)}</div>`:''}
+    <button class="fz-tap ${done?'is-done':''}" data-act="stitch" data-d="1" aria-label="鉤好一針">${main}<span class="fz-sub">${sub}</span>${done?'':'<span class="fz-hint">點這裡任何地方 ＝ 鉤好一針</span>'}</button>
+    <div class="fz-bot"><button class="btn ghost" data-act="stitch" data-d="-1">− 退一針</button><button class="btn" data-act="round" data-d="1">＋ 下一圈</button></div>
+  </div>`;
+}
+
+render();
+
+/* account sync: one private document per signed-in person */
+(async()=>{
+  try{
+    const c=window.claude; if(!c||!c.use)return;
+    const [db,user]=await Promise.all([c.use('db'),c.use('user')]);
+    const id=user&&await user.id();
+    if(db&&id){
+      store=db.doc('data/users/'+id+'/book');
+      const snap=await store.get();
+      const d=snap.exists&&snap.data();
+      if(d&&d.json){S=JSON.parse(d.json);migrate();try{localStorage.setItem('crochet-book',d.json)}catch(e){}render()}
+      setSync('已同步到你的帳號');
+    }
+  }catch(e){store=null}
+  try{
+    const c=window.claude; if(!c||!c.use)return;
+    const [as,sm]=await Promise.all([c.use('assets'),c.use('sample')]);
+    assets=as; sample=sm;
+    if(sample){const lim=await sample.limits().catch(()=>null);canImages=!!(lim&&lim.images);if(lim&&lim.images&&lim.images.maxCount)imgMax=Math.min(3,lim.images.maxCount)}
+    render();
+  }catch(e){}
+})();
+</script>
+</body></html>
