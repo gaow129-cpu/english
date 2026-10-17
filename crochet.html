@@ -294,7 +294,7 @@ function render(){
   else if(view.tab==='patterns')m.innerHTML=view.pattern&&byId(S.patterns,view.pattern)?patternDetail(byId(S.patterns,view.pattern)):patternList();
   else if(view.tab==='yarns')m.innerHTML=yarnList();
   else m.innerHTML=swatchList();
-  const cur=m.querySelector('.rd.cur');if(cur&&view._scroll){cur.scrollIntoView({block:'center'});view._scroll=false}
+  view._scroll=false;
   if(view.tab==='swatches')runCalc();
 }
 
@@ -593,7 +593,7 @@ document.addEventListener('click',e=>{
   if(a==='back-pattern'){view.pattern=null;save();render();return}
   if(a==='round'&&p){p.round=Math.max(1,p.round+ +t.dataset.d);p.stitch=0;p.updated=Date.now();
     const rs=patternRounds(byId(S.patterns,p.patternId));if(rs.length&&p.round>rs[rs.length-1].n&&p.status!=='done'){p.status='finishing'}
-    view._scroll=true;save();render();return}
+    save();render();window.scrollTo(0,0);return}
   if(a==='stitch'&&p){stitchMove(p,+t.dataset.d);return}
   if(a==='focus-on'){view.focus=true;save();render();wake(true);return}
   if(a==='focus-off'){voiceStop();view.focus=false;save();render();wake(false);return}
@@ -605,7 +605,7 @@ document.addEventListener('click',e=>{
     if(p.status==='finishing')p.status='active';
     view._scroll=true;save();render();window.scrollTo(0,0);toast('換到「'+partName(byId(S.patterns,to))+'」');return}
   if(a==='stitch-reset'&&p){p.stitch=0;save();render();return}
-  if(a==='goto'&&p){p.round=+t.dataset.n;p.stitch=0;p.updated=Date.now();save();render();return}
+  if(a==='goto'&&p){p.round=+t.dataset.n;p.stitch=0;p.updated=Date.now();save();render();window.scrollTo(0,0);return}
   if(a==='new-project')return openForm('project');
   if(a==='edit-project')return openForm('project',byId(S.projects,t.dataset.id));
   if(a==='new-pattern')return openForm('pattern');
