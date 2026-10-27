@@ -99,7 +99,7 @@ h2{font-family:var(--serif);font-weight:700;font-size:19px;margin:0}
 .focus{display:flex;flex-direction:column}
 .fz-tap{flex:1;min-height:0}
 .focusbtn{width:100%;justify-content:center;margin-bottom:14px;background:var(--rose);color:var(--paper)}
-.focus{position:fixed;inset:0;z-index:15;background:var(--bg);display:grid;grid-template-rows:auto 1fr auto;gap:14px;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 16px)}
+.focus{position:fixed;inset:0;z-index:15;background:var(--bg);display:flex;flex-direction:column;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 16px)}
 .fz-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .fz-top b{font-family:var(--serif);font-size:22px;display:block}
 .fz-top span{color:var(--muted);font-size:13px}
@@ -115,6 +115,25 @@ h2{font-family:var(--serif);font-weight:700;font-size:19px;margin:0}
 .fz-hint{color:var(--muted);font-size:12px;letter-spacing:.06em;margin-top:8px}
 .fz-bot{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}
 .fz-bot .btn{justify-content:center;padding:14px}
+.diag{margin-top:14px;padding:0;overflow:hidden}
+.diag summary{padding:12px 16px;cursor:pointer;font-weight:500;color:var(--green)}
+.diag-body{padding:0 12px 14px;display:grid;gap:10px}
+.diag-body>svg{width:100%;height:auto;max-width:520px;justify-self:center}
+.nowstrip{margin-top:14px;display:grid;gap:8px}
+.focus .fz-tap{max-height:42vh}
+.focus .fz-bot{margin-top:auto}
+.focus .nowstrip .lbl{font-size:14px}
+.reprow{display:flex;align-items:center;gap:10px}
+.repbadge{font-size:13px;font-weight:700;color:var(--rose);white-space:nowrap}
+.repbar{flex:1;height:6px;border-radius:9px;background:var(--line);overflow:hidden}
+.repbar i{display:block;height:100%;background:var(--rose)}
+.nowstrip .lbl{font-size:12px;letter-spacing:.08em;color:var(--rose);font-weight:500}
+.gridhead{font-weight:500;font-size:14px;margin-top:4px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:4px}
+.legend i{font-style:normal;display:inline-grid;place-items:center;width:13px;height:13px;font-size:9px;border:1px solid var(--line);color:var(--muted)}
+.gridwrap{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+.gridwrap svg{display:block}
 .photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
 .ph{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--line);max-width:100%}
 .ph img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
@@ -224,15 +243,41 @@ const BAG_NOTES='記號扣掛在兩端 9 針的第 5 針（正中間）。從記
 const PROJ_NOTES='兩側各 9 針、前後片各 34 針，整圈 86 針。';
 
 /* "短針7、減1、短針11 ×2" -> steps + repeat */
-const KIND={'短':'短針','短針':'短針','減':'減針','減針':'減針','加':'加針','加針':'加針','中長針':'中長針','長針':'長針','鎖針':'鎖針','引拔':'引拔'};
+const KIND={'下針':'下針','上針':'上針','收針':'收針','起針':'起針','外鉤長針':'外鉤長針','內鉤長針':'內鉤長針','短':'短針','短針':'短針','減':'減針','減針':'減針','加':'加針','加針':'加針','中長針':'中長針','長針':'長針','鎖針':'鎖針','引拔':'引拔'};
 function parseSteps(text){
-  const steps=[];const re=/(中長針|長針|鎖針|引拔|短針|減針|加針|短|減|加)\s*(\d+)/g;let m;
-  while((m=re.exec(text))){steps.push({k:KIND[m[1]],n:+m[2]})}
+  const steps=[];const re=/(外鉤長針|內鉤長針|中長針|長針|鎖針|引拔|短針|下針|上針|收針|起針|減針|加針|短|減|加)\s*(\d+)/g;let m;
+  while((m=re.exec(text))){if((m[1]==='起針'||m[1]==='收針')&&/\s/.test(m[0]))continue;steps.push({k:KIND[m[1]],n:+m[2]})}
   if(!steps.length)return null;
   const rep=+((text.match(/[×xX＊*]\s*(\d+)/)||[])[1])||1;
+  const skipCh=/跳過/.test(text);const knit=/下針|上針/.test(text);
   const actions=[];
-  for(let r=0;r<rep;r++)steps.forEach((s,si)=>{for(let i=0;i<s.n;i++)actions.push({r,si,i,w:s.k==='加針'?2:(s.k==='引拔'||s.k==='鎖針')?0:1})});
+  for(let r=0;r<rep;r++)steps.forEach((s,si)=>{for(let i=0;i<s.n;i++)actions.push({r,si,i,w:s.k==='加針'?(knit?1:2):(s.k==='引拔'||s.k==='收針')?0:s.k==='鎖針'?(skipCh?1:0):1})});
   return {steps,rep,actions};
+}
+const BUILTIN_PATTERNS=[{"id": "hobo-base", "flat": false, "group": "黑灰 hobo 包", "part": "① 包底一圈（黑）", "name": "黑灰 hobo 包－① 包底一圈（黑）", "cat": "包包", "source": "小紅書文字圖解（已修正減針）", "photos": [], "notes": "線：8mm 冰島粗毛線（黑、淺灰）。鉤針：9/0（5.5mm）。包底用 52 孔包底板，第1圈照孔鉤：短邊3孔、轉角4孔各鉤2針、長邊13孔、轉角、短邊5孔、轉角、長邊13孔、轉角、最後2孔，一圈 68 針。\n這是一個包，照 ①→②→③ 的順序鉤：①黑線沿包底板鉤一圈再往上 2 圈 → ②黑半邊（前面 34 針）來回鉤 → ③灰半邊（後面 34 針）接灰線來回鉤。\n記號扣：A＝起點那個短邊的正中間孔（第1針），B＝第35針（另一個短邊5孔的正中間）。A 這側是斜邊＝包口，B 這側是直邊＝縫合。\n① 包底一圈：第1圈照孔鉤，轉角每孔鉤2針（加針），一圈68針。每圈結束引拔接回第一針，鎖1針再開始下一圈。第2、3圈每針鉤1針短針，共3圈黑邊。\n組合：①黑、灰兩半的直邊（B 側）對齊，用短針縫合，從黑邊上方縫到背帶開始的地方 ②A 側斜邊不縫，就是包口 ③兩條背帶頂端12針對齊，用引拔接起來 ④沿包口整圈鉤1行短針加固。\n背帶原文60行，鉤到一半先把兩條夾起來試背，兩邊要一樣長。包身想高一點，就在 ① 多繞幾圈黑邊。", "text": "1: 從包底板短邊正中間的孔開始（記號扣A） 短針3、加4、短針13、加4、短針5、加4、短針13、加4、短針2（共68針）\n2-3: 短針68（共68針）"}, {"id": "hobo-black", "flat": true, "align": "right", "group": "黑灰 hobo 包", "part": "② 黑半邊", "name": "黑灰 hobo 包－② 黑半邊", "cat": "包包", "source": "小紅書文字圖解（已修正減針）", "photos": [], "notes": "線：8mm 冰島粗毛線（黑、淺灰）。鉤針：9/0（5.5mm）。包底用 52 孔包底板，第1圈照孔鉤：短邊3孔、轉角4孔各鉤2針、長邊13孔、轉角、短邊5孔、轉角、長邊13孔、轉角、最後2孔，一圈 68 針。\n這是一個包，照 ①→②→③ 的順序鉤：①黑線沿包底板鉤一圈再往上 2 圈 → ②黑半邊（前面 34 針）來回鉤 → ③灰半邊（後面 34 針）接灰線來回鉤。\n記號扣：A＝起點那個短邊的正中間孔（第1針），B＝第35針（另一個短邊5孔的正中間）。A 這側是斜邊＝包口，B 這側是直邊＝縫合。\n② 黑半邊：第3圈鉤完後，從 A（第1針）開始只鉤第1～34針（A 到 B 前一針），翻面來回鉤。單數行在開頭（A 側）減針、雙數行在結尾（A 側）減針，22 行從 34 針減到 12 針，再鉤 12 針背帶 60 行（第 23～82 行）。\n組合：①黑、灰兩半的直邊（B 側）對齊，用短針縫合，從黑邊上方縫到背帶開始的地方 ②A 側斜邊不縫，就是包口 ③兩條背帶頂端12針對齊，用引拔接起來 ④沿包口整圈鉤1行短針加固。\n背帶原文60行，鉤到一半先把兩條夾起來試背，兩邊要一樣長。包身想高一點，就在 ① 多繞幾圈黑邊。", "text": "1: 減1、短針32（共33針）\n2: 短針31、減1（共32針）\n3: 減1、短針30（共31針）\n4: 短針29、減1（共30針）\n5: 減1、短針28（共29針）\n6: 短針27、減1（共28針）\n7: 減1、短針26（共27針）\n8: 短針25、減1（共26針）\n9: 減1、短針24（共25針）\n10: 短針23、減1（共24針）\n11: 減1、短針22（共23針）\n12: 短針21、減1（共22針）\n13: 減1、短針20（共21針）\n14: 短針19、減1（共20針）\n15: 減1、短針18（共19針）\n16: 短針17、減1（共18針）\n17: 減1、短針16（共17針）\n18: 短針15、減1（共16針）\n19: 減1、短針14（共15針）\n20: 短針13、減1（共14針）\n21: 減1、短針12（共13針）\n22: 短針11、減1（共12針）\n23-82: 短針12（共12針）"}, {"id": "hobo-grey", "flat": true, "align": "right", "rev": "odd", "group": "黑灰 hobo 包", "part": "③ 灰半邊（接灰線）", "name": "黑灰 hobo 包－③ 灰半邊（接灰線）", "cat": "包包", "source": "小紅書文字圖解（已修正減針）", "photos": [], "notes": "線：8mm 冰島粗毛線（黑、淺灰）。鉤針：9/0（5.5mm）。包底用 52 孔包底板，第1圈照孔鉤：短邊3孔、轉角4孔各鉤2針、長邊13孔、轉角、短邊5孔、轉角、長邊13孔、轉角、最後2孔，一圈 68 針。\n這是一個包，照 ①→②→③ 的順序鉤：①黑線沿包底板鉤一圈再往上 2 圈 → ②黑半邊（前面 34 針）來回鉤 → ③灰半邊（後面 34 針）接灰線來回鉤。\n記號扣：A＝起點那個短邊的正中間孔（第1針），B＝第35針（另一個短邊5孔的正中間）。A 這側是斜邊＝包口，B 這側是直邊＝縫合。\n③ 灰半邊：在 B（第35針）接灰線，鉤第35～68針共34針（B 回到 A），翻面來回鉤。單數行在結尾（A 側）減針、雙數行在開頭（A 側）減針，減針一定要在 A 側，和黑色同一邊。22 行減到 12 針，再鉤 12 針背帶 60 行。\n組合：①黑、灰兩半的直邊（B 側）對齊，用短針縫合，從黑邊上方縫到背帶開始的地方 ②A 側斜邊不縫，就是包口 ③兩條背帶頂端12針對齊，用引拔接起來 ④沿包口整圈鉤1行短針加固。\n背帶原文60行，鉤到一半先把兩條夾起來試背，兩邊要一樣長。包身想高一點，就在 ① 多繞幾圈黑邊。", "text": "1: 短針32、減1（共33針）\n2: 減1、短針31（共32針）\n3: 短針30、減1（共31針）\n4: 減1、短針29（共30針）\n5: 短針28、減1（共29針）\n6: 減1、短針27（共28針）\n7: 短針26、減1（共27針）\n8: 減1、短針25（共26針）\n9: 短針24、減1（共25針）\n10: 減1、短針23（共24針）\n11: 短針22、減1（共23針）\n12: 減1、短針21（共22針）\n13: 短針20、減1（共21針）\n14: 減1、短針19（共20針）\n15: 短針18、減1（共19針）\n16: 減1、短針17（共18針）\n17: 短針16、減1（共17針）\n18: 減1、短針15（共16針）\n19: 短針14、減1（共15針）\n20: 減1、短針13（共14針）\n21: 短針12、減1（共13針）\n22: 減1、短針11（共12針）\n23-82: 短針12（共12針）"}, {"id": "dog-hat-body", "group": "法鬥小熊耳帽", "part": "① 帽身（臉→脖子）", "name": "法鬥小熊耳帽－① 帽身（臉→脖子）", "cat": "狗狗", "source": "照影片改寫的鉤針版（Claude 設計）", "photos": [], "notes": "線：五股牛奶棉。鉤針：6/0（3.5mm）。每圈結束引拔接回第一針、鎖1針（不算針數）再開始下一圈。\n狗狗尺寸：臉圈43、頭圍48.5、頸圍52、耳距11.5、耳長12（公分）。耳根寬約7、帽身長約14公分是估的。\n密度：Y.C 實際起針 104 針剛好繞臉一圈（43 公分），照這個密度（約 10 公分 24 針）算全部針數。\n構造：一條從臉往脖子套的筒狀帽子。①帽身：臉邊螺紋→頭頂留兩個耳洞→往後慢慢加寬→脖子螺紋。②耳套：從耳洞挑針往上鉤成三角錐，狗狗耳朵塞進去，要鉤2個。\n外鉤長針／內鉤長針：從正面／背面挑起前一圈長針的整根針柱鉤長針，交替鉤出直條螺紋，有彈性。\n起點（每圈第1針）放在下巴正下方，掛記號扣。\n檢查點①：第3圈鉤完再繞臉比一次。鎖針通常比短針緊，如果鉤成短針後開口變太鬆，可以把第2～3圈的螺紋鉤緊一點。\n檢查點②：第6圈鉤耳洞（鎖17針跳過17針），兩個洞中間隔28針（約11.5公分）。第7圈鉤完套上去，兩個洞要在兩隻耳朵根部。\n檢查點③：第18圈鉤完套上去，帽身要蓋到後腦和脖子交接處；不夠長就多鉤幾圈短針124，太長就少鉤。", "text": "1: 鎖104針，頭尾引拔接成圈（不要扭轉），每針鉤1針短針（共104針）\n2-3: 外鉤長針1、內鉤長針1 ×52（共104針）\n4: 短針25、加1 ×4（共108針）\n5: 短針26、加1 ×4（共112針）\n6: 短針25、鎖針17（跳過17針）、短針28、鎖針17（跳過17針）、短針25（共112針）\n7: 短針112（共112針）\n8: 短針27、加1 ×4（共116針）\n9-10: 短針116（共116針）\n11: 短針28、加1 ×4（共120針）\n12-13: 短針120（共120針）\n14: 短針29、加1 ×4（共124針）\n15-18: 短針124（共124針）\n19-24: 外鉤長針1、內鉤長針1 ×62，最後一圈收針（共124針）"}, {"id": "dog-hat-ear", "group": "法鬥小熊耳帽", "part": "② 耳套（鉤2個）", "name": "法鬥小熊耳帽－② 耳套（鉤2個）", "cat": "狗狗", "source": "照影片改寫的鉤針版（Claude 設計）", "photos": [], "notes": "線：五股牛奶棉。鉤針：6/0（3.5mm）。每圈結束引拔接回第一針、鎖1針（不算針數）再開始下一圈。\n狗狗尺寸：臉圈43、頭圍48.5、頸圍52、耳距11.5、耳長12（公分）。耳根寬約7、帽身長約14公分是估的。\n密度：Y.C 實際起針 104 針剛好繞臉一圈（43 公分），照這個密度（約 10 公分 24 針）算全部針數。\n構造：一條從臉往脖子套的筒狀帽子。①帽身：臉邊螺紋→頭頂留兩個耳洞→往後慢慢加寬→脖子螺紋。②耳套：從耳洞挑針往上鉤成三角錐，狗狗耳朵塞進去，要鉤2個。\n外鉤長針／內鉤長針：從正面／背面挑起前一圈長針的整根針柱鉤長針，交替鉤出直條螺紋，有彈性。\n耳套要鉤2個，一個耳洞一個。\n第1圈沿著耳洞一圈挑36針；第2～19圈不加不減（約7公分），第20圈開始每圈兩邊各減1針，收成尖尖的耳朵。\n檢查點：鉤到第19圈先讓狗狗的耳朵塞進去試，耳朵要能整個放進去不會被壓彎；耳朵比較長就多鉤幾圈短針36再開始減。", "text": "1: 沿著耳洞一圈挑針：洞下緣17針、轉角1針、鎖針那邊17針、轉角1針，每針鉤1針短針（共36針）\n2-19: 短針36（共36針）\n20: 短針16、減1 ×2（共34針）\n21: 短針15、減1 ×2（共32針）\n22: 短針14、減1 ×2（共30針）\n23: 短針13、減1 ×2（共28針）\n24: 短針12、減1 ×2（共26針）\n25: 短針11、減1 ×2（共24針）\n26: 短針10、減1 ×2（共22針）\n27: 短針9、減1 ×2（共20針）\n28: 短針8、減1 ×2（共18針）\n29: 短針7、減1 ×2（共16針）\n30: 短針6、減1 ×2（共14針）\n31: 短針5、減1 ×2（共12針）\n32: 短針4、減1 ×2（共10針）\n33: 短針3、減1 ×2（共8針）\n34: 短針2、減1 ×2（共6針）\n35: 減1 ×3，收針，把線藏進耳套裡（共3針）"}, {"id": "dog-hat-knit-body", "group": "法鬥小熊耳帽（棒針）", "part": "① 帽身（臉→脖子）", "name": "法鬥小熊耳帽（棒針）－① 帽身（臉→脖子）", "cat": "狗狗", "source": "輪針版（Claude 設計）", "photos": [], "notes": "線：五股牛奶棉。工具：輪針（40 公分線長）；耳套針數少，要用雙頭棒針或 80 公分輪針「魔術環」織。全部繞圈織，不用翻面。\n狗狗尺寸：臉圈43、頭圍48.5、頸圍52、耳距11.5、耳長12（公分）。耳根寬約7、帽身長約14公分是估的。\n密度：Y.C 樣片 10 公分約 18～20 針，取中間 19 針計算。臉邊和脖子用 2 下 2 上螺紋，會稍微縮，所以針數取在比較貼的那一邊。\n寫法：下針、上針；加1＝挑起針與針之間的渡線扭轉織下針（M1）；減1＝2併1；收針N＝收掉N針（留洞）；起針N＝下一圈在洞的上方用捲加針起N針（補回來）。\n構造：從臉往脖子織的筒狀帽子。①帽身：臉邊螺紋→頭頂收針留兩個耳洞→平針慢慢加寬→脖子螺紋。②耳套：從耳洞挑針往上織成尖錐，耳朵塞進去，要織2個。\n檢查點①：第9圈織完，用廢線把針目串起來套在臉上比（臉圈約43公分）。太緊或太鬆就告訴 Claude 差多少，重新算起針數（4的倍數）。\n檢查點②：第11圈收針留耳洞（每個13針，中間隔22針），第12圈在洞上方起針補回。織完第13圈套上去，兩個洞要在耳朵根部。\n檢查點③：第30圈織完套上去，帽身要蓋到後腦和脖子交接處；不夠長就多織幾圈下針96，太長就少織，再開始脖子螺紋。", "text": "1: 用長尾起針法起84針，接成圈（不要扭轉），起點在下巴正下方（共84針）\n2-9: 下針2、上針2 ×21（共84針）\n10: 下針14、加1 ×6（共90針）\n11: 下針21、收針13、下針22、收針13、下針21（共64針）\n12: 下針21、起針13、下針22、起針13、下針21（共90針）\n13-16: 下針90（共90針）\n17: 下針15、加1 ×6（共96針）\n18-30: 下針96（共96針）\n31-42: 下針2、上針2 ×24，最後一圈織完用有彈性的方法收針（共96針）"}, {"id": "dog-hat-knit-ear", "group": "法鬥小熊耳帽（棒針）", "part": "② 耳套（織2個）", "name": "法鬥小熊耳帽（棒針）－② 耳套（織2個）", "cat": "狗狗", "source": "輪針版（Claude 設計）", "photos": [], "notes": "線：五股牛奶棉。工具：輪針（40 公分線長）；耳套針數少，要用雙頭棒針或 80 公分輪針「魔術環」織。全部繞圈織，不用翻面。\n狗狗尺寸：臉圈43、頭圍48.5、頸圍52、耳距11.5、耳長12（公分）。耳根寬約7、帽身長約14公分是估的。\n密度：Y.C 樣片 10 公分約 18～20 針，取中間 19 針計算。臉邊和脖子用 2 下 2 上螺紋，會稍微縮，所以針數取在比較貼的那一邊。\n寫法：下針、上針；加1＝挑起針與針之間的渡線扭轉織下針（M1）；減1＝2併1；收針N＝收掉N針（留洞）；起針N＝下一圈在洞的上方用捲加針起N針（補回來）。\n構造：從臉往脖子織的筒狀帽子。①帽身：臉邊螺紋→頭頂收針留兩個耳洞→平針慢慢加寬→脖子螺紋。②耳套：從耳洞挑針往上織成尖錐，耳朵塞進去，要織2個。\n耳套要織2個。第1圈沿耳洞挑28針，平均分在雙頭棒針上（或用魔術環）。第2～21圈全下針（約8公分）。\n第22圈開始，減針圈和平織圈交替：減針圈每一半都是「下針1、右上2併1、下針到剩3針、左上2併1、下針1」（圖解寫成減1），每次少4針，減到8針後收口。\n檢查點：織到第21圈先讓耳朵塞進去試，耳朵要能整個放進去；耳朵比較長就多織幾圈下針28再開始減。", "text": "1: 沿著耳洞一圈挑針：收針那邊13針、轉角1針、起針那邊13針、轉角1針（共28針）\n2-21: 下針28（共28針）\n22: 下針1、減1、下針8、減1、下針1 ×2（共24針）\n23: 下針24（共24針）\n24: 下針1、減1、下針6、減1、下針1 ×2（共20針）\n25: 下針20（共20針）\n26: 下針1、減1、下針4、減1、下針1 ×2（共16針）\n27: 下針16（共16針）\n28: 下針1、減1、下針2、減1、下針1 ×2（共12針）\n29: 下針12（共12針）\n30: 下針1、減1、減1、下針1 ×2（共8針）\n31: 剪線留15公分，用毛線針穿過剩下8針，拉緊收口（共8針）"}];
+const BUILTIN_PROJECTS=[{"id": "hobo", "name": "黑灰 hobo 包", "status": "active", "patternId": "hobo-base", "yarnId": "", "hook": "5.5", "color": "#2C2C2A", "round": 1, "stitch": 0, "notes": "9/0（5.5mm）鉤針。52 孔包底板版：照 ① 包底一圈（黑）→ ② 黑半邊 → ③ 灰半邊 的順序鉤，點上方按鈕切換。最後只縫 B 側直邊、接背帶。"}, {"id": "dog-hat", "name": "法鬥小熊耳帽", "status": "active", "patternId": "dog-hat-body", "yarnId": "", "hook": "3.5", "color": "#7F9BC9", "round": 1, "stitch": 0, "notes": "五股牛奶棉、6/0（3.5mm）。起針104針。先鉤 ① 帽身，再鉤 2 個 ② 耳套。照圖解裡的檢查點，邊鉤邊套在狗狗頭上比。"}, {"id": "dog-hat-knit", "name": "法鬥小熊耳帽（棒針）", "status": "active", "patternId": "dog-hat-knit-body", "yarnId": "", "hook": "", "color": "#7F9BC9", "round": 1, "stitch": 0, "notes": "輪針版：五股牛奶棉，密度10公分約19針。起84針，第9圈用廢線套臉比。先織 ① 帽身，再織 2 個 ② 耳套。"}];
+function fixHobo(){for(const id of ['hobo-black','hobo-grey']){const b=BUILTIN_PATTERNS.find(x=>x.id===id),cur=(S.patterns||[]).find(x=>x.id===id);if(b&&cur&&!String(cur.notes||'').includes('這是一個包')){cur.text=b.text;cur.notes=b.notes;cur.part=b.part;cur.name=b.name;cur.flat=b.flat;cur.align=b.align;cur.rev=b.rev}}
+  const pj=(S.projects||[]).find(x=>x.id==='hobo');if(pj&&String(pj.notes||'').includes('先鉤黑色片'))pj.notes='9/0（5.5mm）鉤針。52 孔包底板版：照 ① 包底一圈（黑）→ ② 黑半邊 → ③ 灰半邊 的順序鉤，點上方按鈕切換。最後只縫 B 側直邊、接背帶。';}
+function fixKnitHat(){const P=S.patterns||[];let ch=false;for(const id of ['dog-hat-knit-body','dog-hat-knit-ear']){const b=BUILTIN_PATTERNS.find(x=>x.id===id),cur=P.find(x=>x.id===id);if(b&&cur&&!String(cur.notes||'').includes('19 針計算')){cur.text=b.text;cur.notes=b.notes;ch=true}}
+  if(ch)for(const pj of (S.projects||[]))if(pj.id==='dog-hat-knit'){pj.notes='輪針版：五股牛奶棉，密度10公分約19針。起84針，第9圈用廢線套臉比。先織 ① 帽身，再織 2 個 ② 耳套。';pj.hook='';pj.round=1;pj.stitch=0;pj.prog={};pj.patternId='dog-hat-knit-body'}}
+function fixDogHat(){const P=S.patterns||[];let ch=false;for(const id of ['dog-hat-body','dog-hat-ear']){const b=BUILTIN_PATTERNS.find(x=>x.id===id),cur=P.find(x=>x.id===id);if(b&&cur&&!String(cur.notes||'').includes('104 針')){cur.text=b.text;cur.notes=b.notes;ch=true}}
+  if(ch)for(const pj of (S.projects||[]))if(pj.id==='dog-hat')pj.notes='五股牛奶棉、6/0（3.5mm）。起針104針。先鉤 ① 帽身，再鉤 2 個 ② 耳套。照圖解裡的檢查點，邊鉤邊套在狗狗頭上比。';}
+function fixHobo5(){const P=S.patterns||[];for(const id of ['hobo-base','hobo-black','hobo-grey']){const b=BUILTIN_PATTERNS.find(x=>x.id===id),cur=P.find(x=>x.id===id);if(b&&cur&&String(cur.notes||'').includes('52 孔包底板')&&!String(cur.notes||'').includes('一圈 68 針')){Object.assign(cur,{text:b.text,notes:b.notes})}}}
+function fixHobo4(){const P=S.patterns||[];let changed=false;for(const id of ['hobo-base','hobo-black','hobo-grey']){const b=BUILTIN_PATTERNS.find(x=>x.id===id),cur=P.find(x=>x.id===id);if(b&&cur&&!String(cur.notes||'').includes('52 孔包底板')){Object.assign(cur,{text:b.text,notes:b.notes,part:b.part,name:b.name,flat:b.flat,align:b.align,rev:b.rev});changed=true}}
+  if(changed)for(const pj of (S.projects||[])){if(pj.id==='hobo'){pj.patternId='hobo-base';pj.round=1;pj.stitch=0;pj.prog={};pj.notes='52 孔包底板版：照 ① 包底一圈（黑）→ ② 黑半邊 → ③ 灰半邊 的順序鉤，點上方按鈕切換。最後只縫 B 側直邊、接背帶。'}}}
+function fixHobo3(){const P=S.patterns||[];if(P.find(x=>x.id==='hobo-base'))return;const bi=P.findIndex(x=>x.id==='hobo-black');if(bi<0)return;
+  const nb=BUILTIN_PATTERNS.find(x=>x.id==='hobo-base'),bl=BUILTIN_PATTERNS.find(x=>x.id==='hobo-black'),gr=BUILTIN_PATTERNS.find(x=>x.id==='hobo-grey');
+  P.splice(bi,0,JSON.parse(JSON.stringify(nb)));Object.assign(P[bi+1],{text:bl.text,notes:bl.notes,part:bl.part,name:bl.name,flat:bl.flat,align:bl.align});
+  const g=P.find(x=>x.id==='hobo-grey');if(g)Object.assign(g,{part:gr.part,name:gr.name,notes:gr.notes});
+  S.builtins=S.builtins||[];if(!S.builtins.includes('hobo-base'))S.builtins.push('hobo-base');
+  for(const pj of (S.projects||[])){
+    if(pj.patternId==='hobo-black'){if(pj.round<=12){pj.patternId='hobo-base'}else{pj.round=pj.round-12}}
+    if(pj.prog&&pj.prog['hobo-black']){const pr=pj.prog['hobo-black'];if(pr.round<=12){pj.prog['hobo-base']=pr;delete pj.prog['hobo-black']}else pr.round-=12}
+    if(pj.id==='hobo')pj.notes='9/0（5.5mm）鉤針。52 孔包底板版：照 ① 包底一圈（黑）→ ② 黑半邊 → ③ 灰半邊 的順序鉤，點上方按鈕切換。最後只縫 B 側直邊、接背帶。';
+  }}
+function addBuiltins(){S.builtins=S.builtins||[];S.patterns=S.patterns||[];S.projects=S.projects||[];
+  for(const b of BUILTIN_PATTERNS.slice().reverse()){if(S.builtins.includes(b.id))continue;if(!S.patterns.find(x=>x.id===b.id))S.patterns.unshift(JSON.parse(JSON.stringify(b)));S.builtins.push(b.id)}
+  for(const b of BUILTIN_PROJECTS){const k='proj:'+b.id;if(S.builtins.includes(k))continue;if(!S.projects.find(x=>x.id===b.id))S.projects.unshift({...JSON.parse(JSON.stringify(b)),updated:Date.now()});S.builtins.push(k)}
 }
 function migrate(){
   const bp=S.patterns&&S.patterns.find(p=>p.id==='bagpattern');
@@ -246,8 +291,54 @@ function migrate(){
       notes:'包身引拔結束後再鉤。在兩側的正中間各掛一個記號扣（就是包身用的那兩個）。從記號扣往回數 9 針，在那一針接新線，跨過記號扣鉤 18 針。\n往返鉤：每行鉤完翻面，鎖 1 針（不算針數）再鉤下一行。\n第 7～14 行可以多鉤或少鉤，調整背帶長短。\n最後一行留長一點的線，把這 18 針縫到另一側記號扣兩邊的 18 針上。',
       text:BAG_STRAP});
   }
+  fixHobo3();addBuiltins();fixHobo();fixHobo4();fixHobo5();fixDogHat();fixKnitHat();
   S.v=2;
 }
+const HOBO_SVG="<svg viewBox=\"0 0 380 470\" role=\"img\" aria-label=\"黑灰 hobo 包 52 孔包底版：上方是包底板俯視圖，下方是黑半邊正面\"><text x=\"190\" y=\"16\" text-anchor=\"middle\" font-size=\"14\" font-weight=\"700\" fill=\"var(--ink)\">包底板（從上往下看）</text><rect x=\"95\" y=\"50\" width=\"190\" height=\"70\" rx=\"10\" fill=\"#D3D1C7\" stroke=\"#888780\"/><path d=\"M 85 85 L 85 52 Q 85 40 97 40 L 283 40 Q 295 40 295 52 L 295 85\" fill=\"none\" stroke=\"#B4B2A9\" stroke-width=\"8\"/><path d=\"M 85 85 L 85 118 Q 85 130 97 130 L 283 130 Q 295 130 295 118 L 295 85\" fill=\"none\" stroke=\"#2C2C2A\" stroke-width=\"8\"/><circle cx=\"85\" cy=\"85\" r=\"7\" fill=\"#EF9F27\" stroke=\"#854F0B\"/><circle cx=\"295\" cy=\"85\" r=\"7\" fill=\"#EF9F27\" stroke=\"#854F0B\"/><text x=\"74\" y=\"80\" text-anchor=\"end\" font-size=\"13\" font-weight=\"700\" fill=\"var(--ink)\">A</text><text x=\"74\" y=\"96\" text-anchor=\"end\" font-size=\"11\" fill=\"var(--muted)\">起點</text><text x=\"306\" y=\"80\" font-size=\"13\" font-weight=\"700\" fill=\"var(--ink)\">B</text><text x=\"306\" y=\"96\" font-size=\"11\" fill=\"var(--muted)\">第35針</text><text x=\"190\" y=\"90\" text-anchor=\"middle\" font-size=\"11\" fill=\"var(--muted)\">52 孔：一圈 68 針</text><text x=\"190\" y=\"29\" text-anchor=\"middle\" font-size=\"11\" fill=\"var(--muted)\">後面 34 針＝③ 灰半邊</text><text x=\"190\" y=\"148\" text-anchor=\"middle\" font-size=\"11\" fill=\"var(--muted)\">前面 34 針＝② 黑半邊</text><text x=\"190\" y=\"182\" text-anchor=\"middle\" font-size=\"14\" font-weight=\"700\" fill=\"var(--ink)\">黑半邊（正面看）</text><path d=\"M 80 400 L 300 400 L 300 290 L 300 200 L 240 200 L 240 290 Z\" fill=\"#2C2C2A\" stroke=\"#888780\"/><rect x=\"80\" y=\"400\" width=\"220\" height=\"40\" fill=\"#1E1E1C\" stroke=\"#888780\"/><line x1=\"80\" y1=\"400\" x2=\"300\" y2=\"400\" stroke=\"#888780\" stroke-dasharray=\"3 3\"/><text x=\"190\" y=\"425\" text-anchor=\"middle\" font-size=\"11\" fill=\"#F1EFE8\">① 黑邊 3 圈（68 針一圈）</text><text x=\"262\" y=\"370\" text-anchor=\"middle\" font-size=\"11\" fill=\"#F1EFE8\">② 1～22 行</text><text x=\"262\" y=\"386\" text-anchor=\"middle\" font-size=\"11\" fill=\"#F1EFE8\">34→12 針</text><text x=\"270\" y=\"240\" text-anchor=\"middle\" font-size=\"11\" fill=\"#F1EFE8\">背帶</text><text x=\"270\" y=\"256\" text-anchor=\"middle\" font-size=\"11\" fill=\"#F1EFE8\">23～82</text><text x=\"120\" y=\"300\" text-anchor=\"middle\" font-size=\"11\" fill=\"var(--muted)\">A 側斜邊</text><text x=\"120\" y=\"316\" text-anchor=\"middle\" font-size=\"11\" fill=\"var(--muted)\">＝包口</text><text x=\"308\" y=\"330\" font-size=\"11\" fill=\"var(--muted)\">B 側</text><text x=\"308\" y=\"346\" font-size=\"11\" fill=\"var(--muted)\">直邊</text><text x=\"308\" y=\"362\" font-size=\"11\" fill=\"var(--muted)\">和灰縫</text><text x=\"190\" y=\"460\" text-anchor=\"middle\" font-size=\"11\" fill=\"var(--muted)\">③ 灰半邊在背面，形狀一樣，斜邊也在 A 側</text></svg>";
+const DOGHAT_SVG="<svg viewBox=\"0 -34 380 364\" role=\"img\" aria-label=\"法鬥小熊耳帽構造：筒狀帽身，臉邊螺紋、頭頂兩個耳洞接耳套、往後加寬、脖子螺紋\"><text x=\"190\" y=\"-16\" text-anchor=\"middle\" font-size=\"14\" font-weight=\"700\" fill=\"var(--ink)\">從側面看帽子的構造</text><path d=\"M 70 70 L 70 250 L 300 270 L 300 50 Z\" fill=\"#B5D4F4\" stroke=\"#185FA5\"/><rect x=\"70\" y=\"70\" width=\"22\" height=\"180\" fill=\"#85B7EB\" stroke=\"#185FA5\"/><path d=\"M 270 270 L 300 270 L 300 50 L 270 52 Z\" fill=\"#85B7EB\" stroke=\"#185FA5\"/><polygon points=\"110,64 128,4 146,61\" fill=\"#378ADD\" stroke=\"#185FA5\"/><line x1=\"110\" y1=\"64\" x2=\"146\" y2=\"61\" stroke=\"#D85A30\" stroke-width=\"3\"/><text x=\"81\" y=\"290\" text-anchor=\"middle\" font-size=\"11\" fill=\"var(--muted)\">臉邊螺紋</text><text x=\"81\" y=\"304\" text-anchor=\"middle\" font-size=\"11\" fill=\"var(--muted)\">第2～3圈</text><text x=\"285\" y=\"290\" text-anchor=\"middle\" font-size=\"11\" fill=\"var(--muted)\">脖子螺紋</text><text x=\"285\" y=\"304\" text-anchor=\"middle\" font-size=\"11\" fill=\"var(--muted)\">第19～24圈</text><text x=\"185\" y=\"165\" text-anchor=\"middle\" font-size=\"12\" fill=\"#0C447C\">短針帽身</text><text x=\"185\" y=\"182\" text-anchor=\"middle\" font-size=\"11\" fill=\"#0C447C\">104→124 針慢慢加寬</text><text x=\"160\" y=\"36\" font-size=\"11\" fill=\"var(--muted)\">② 耳套（2 個）</text><text x=\"160\" y=\"52\" font-size=\"11\" fill=\"#D85A30\">第6圈耳洞＝鎖17跳17</text><text x=\"40\" y=\"160\" text-anchor=\"middle\" font-size=\"11\" fill=\"var(--muted)\">臉</text><text x=\"335\" y=\"160\" text-anchor=\"middle\" font-size=\"11\" fill=\"var(--muted)\">脖子</text><text x=\"190\" y=\"324\" text-anchor=\"middle\" font-size=\"11\" fill=\"var(--muted)\">起點在下巴正下方；兩個耳洞在頭頂，中間隔 28 針（約 11.5 公分）</text></svg>";
+const DIAGRAMS={'dog-hat-body':DOGHAT_SVG,'dog-hat-ear':DOGHAT_SVG,'hobo-base':HOBO_SVG,'hobo-black':HOBO_SVG,'hobo-grey':HOBO_SVG,bagstrap:'<svg viewBox="0 0 380 235" role="img" aria-label="步驟一：包口從上往下看，記號扣左右各 9 針共 18 針是包帶的起點"><text x="190" y="18" text-anchor="middle" font-size="14" font-weight="700" fill="var(--ink)">步驟一\u3000包口（從上往下看）</text><ellipse cx="190" cy="125" rx="150" ry="60" fill="none" stroke="#888780" stroke-width="14"/><path d="M 67.1 90.6 A 150 60 0 0 0 67.1 159.4" fill="none" stroke="#D4537E" stroke-width="14"/><circle cx="40" cy="125" r="7" fill="#EF9F27" stroke="#854F0B"/><circle cx="340" cy="125" r="7" fill="#EF9F27" stroke="#854F0B"/><circle cx="67.1" cy="90.6" r="6" fill="#1D9E75"/><line x1="72" y1="86" x2="104" y2="52" stroke="#1D9E75"/><text x="108" y="50" font-size="12" fill="var(--muted)">● 在這一針接新線開始鉤</text><text x="62" y="129" font-size="12" fill="var(--muted)">記號扣</text><text x="318" y="129" text-anchor="end" font-size="12" fill="var(--muted)">記號扣</text><text x="200" y="118" text-anchor="middle" font-size="14" fill="var(--ink)">粉紅色＝包帶要鉤的 18 針</text><text x="200" y="138" text-anchor="middle" font-size="12" fill="var(--muted)">記號扣左邊 9 針＋右邊 9 針</text><text x="190" y="215" text-anchor="middle" font-size="12" fill="var(--muted)">灰色是包身最後一圈，黃點是兩側的記號扣</text></svg><svg viewBox="0 0 380 300" role="img" aria-label="步驟二：往返鉤成背帶，先變窄再變長再變寬，縫到另一側"><text x="190" y="18" text-anchor="middle" font-size="14" font-weight="700" fill="var(--ink)">步驟二\u3000往返鉤成背帶（正面看）</text><path d="M 85 160 C 85 55, 295 55, 295 160" fill="none" stroke="#1D9E75" stroke-width="18"/><polygon points="60,212 110,212 94,160 76,160" fill="#1D9E75"/><polygon points="270,212 320,212 304,160 286,160" fill="#5DCAA5"/><path d="M 60 212 L 320 212 L 340 290 L 40 290 Z" fill="#B4B2A9" fill-opacity="0.35" stroke="#888780"/><text x="190" y="44" text-anchor="middle" font-size="12" fill="var(--muted)">② 第 7～14 行：8 針長條</text><text x="190" y="60" text-anchor="middle" font-size="12" fill="var(--muted)">想要背帶長一點就多鉤幾行</text><text x="8" y="122" font-size="12" fill="var(--muted)">① 第 1～6 行</text><text x="8" y="138" font-size="12" fill="var(--muted)">18 針 → 8 針</text><text x="372" y="122" text-anchor="end" font-size="12" fill="var(--muted)">③ 第 15～19 行</text><text x="372" y="138" text-anchor="end" font-size="12" fill="var(--muted)">8 針 → 18 針</text><text x="85" y="234" text-anchor="middle" font-size="12" fill="var(--muted)">從這側開始</text><text x="295" y="234" text-anchor="middle" font-size="12" fill="var(--muted)">④ 縫到這側</text><text x="295" y="250" text-anchor="middle" font-size="12" fill="var(--muted)">記號扣左右 18 針</text><text x="190" y="275" text-anchor="middle" font-size="14" fill="var(--ink)">包身</text></svg>'};
+const CELL={'下針':['|','var(--paper)','var(--muted)',1],'上針':['–','#E6F1FB','#185FA5',1],'收針':['×','#F7C1C1','#791F1F',1],'起針':['+','#FAC775','#633806',1],'外鉤長針':['F','#B5D4F4','#0C447C',1],'內鉤長針':['B','#E6F1FB','#185FA5',1],'短針':['X','var(--paper)','var(--muted)',1],'減針':['A','#D4537E','#fff',1],'加針':['V','#1D9E75','#fff',2],'鎖針':['○','var(--paper)','var(--muted)',1],'中長針':['T','#F2E0C4','#633806',1],'長針':['F','#F2E0C4','#633806',1],'引拔':['•','var(--paper)','var(--muted)',1]};
+function gridChart(pat,cur,k){
+  const rs=patternRounds(pat);if(!rs.length)return '';
+  const groups=[];for(const r of rs){const g=groups[groups.length-1];if(g&&g.text===r.text&&g.count===r.count&&g.b===r.n-1){g.b=r.n}else groups.push({a:r.n,b:r.n,text:r.text,count:r.count})}
+  let any=false;const rows=groups.map(g=>{const q=parseSteps(g.text);if(q)any=true;let cells=[],ids=[];let full=false,unitN=0;
+    if(q){for(const st of q.steps){const c=CELL[st.k]||CELL['短針'];for(let i=0;i<st.n;i++){cells.push(c);ids.push(unitN++)}}
+      let u1=cells.reduce((t,c)=>t+c[3],0);
+      if(q.rep>1&&u1*q.rep<=140){const one=cells.slice(),oi=ids.slice();for(let k=1;k<q.rep;k++){cells.push(...one);ids.push(...oi.map(v=>v+k*unitN))}full=true}
+      if(pat.flat&&g.a%2===(pat.rev==='odd'?1:0)){cells.reverse();ids.reverse()}}
+    const u=cells.reduce((t,c)=>t+c[3],0);return {...g,q,cells,ids,u,full,unitN}});
+  if(!any)return '';
+  const W=12,H=14,L=46,maxU=Math.max(...rows.map(r=>r.u),8),R=64,w=L+maxU*W+R,h=rows.length*H+10;let s='';
+  rows.slice().reverse().forEach((r,i)=>{const y=6+i*H,on=cur!=null&&cur>=r.a&&cur<=r.b;
+    s+=`<text x="${L-6}" y="${y+H/2}" text-anchor="end" dominant-baseline="central" font-size="11" fill="${on?'var(--rose)':'var(--muted)'}" font-weight="${on?700:400}">${r.a===r.b?r.a:r.a+'–'+r.b}</text>`;
+    if(!r.q){s+=`<text x="${L}" y="${y+H/2}" dominant-baseline="central" font-size="11" fill="var(--muted)">${esc(String(r.text).slice(0,40))}</text>`;return}
+    let x=L+(pat.align==='right'?(maxU-r.u)*W:pat.align==='left'?0:(maxU-r.u)*W/2);const x0=x;
+    const kk=on&&k!=null?(r.full||r.q.rep===1?k:k%r.unitN):-1;let curX=null;
+    r.cells.forEach((c,ci)=>{const cw=c[3]*W,id=r.ids[ci];s+=`<rect x="${x}" y="${y}" width="${cw}" height="${H}" fill="${c[1]}" stroke="var(--line)" stroke-width="0.8"/><text x="${x+cw/2}" y="${y+H/2+0.5}" text-anchor="middle" dominant-baseline="central" font-size="9" fill="${c[2]}">${c[0]}</text>`;
+      if(kk>=0&&id<kk)s+=`<rect x="${x}" y="${y}" width="${cw}" height="${H}" fill="#1D9E75" fill-opacity="0.45"/>`;
+      if(kk>=0&&id===kk){curX=x;s+=`<rect class="cur-cell" x="${x-1}" y="${y-2}" width="${cw+2}" height="${H+4}" fill="none" stroke="#D85A30" stroke-width="2.5" rx="2"/>`}
+      x+=cw});
+    if(on)s+=`<rect x="${x0-1.5}" y="${y-1}" width="${x-x0+3}" height="${H+2}" fill="none" stroke="var(--rose)" stroke-width="2" rx="2"/>`;
+    s+=`<text x="${L+maxU*W+6}" y="${y+H/2}" dominant-baseline="central" font-size="11" fill="var(--muted)">${r.q.rep>1&&!r.full?'×'+r.q.rep+' ':''}${r.count?'共'+r.count:''}</text>`;
+  });
+  const foot=`↑ 從最下面第 1 行（圈）往上鉤${rows.some(r=>r.q&&r.q.rep>1&&!r.full)?'；右邊寫 ×2 表示這一段要重複 2 次':''}${maxU*W+L+R>340?'；圖比較寬，可以左右滑動':''}`;
+  return `<div class="gridhead">格子圖：一格一針</div><div class="legend"><span><i style="background:var(--paper)">X</i>短針</span><span><i style="background:#D4537E;color:#fff">A</i>減針</span><span><i style="background:#1D9E75;color:#fff;width:24px">V</i>加針</span><span><i style="background:var(--paper)">○</i>鎖針</span>${rows.some(r=>r.cells.some(c=>c[0]==='|'))?'<span><i style="background:var(--paper)">|</i>下針</span><span><i style="background:#E6F1FB;color:#185FA5">–</i>上針</span><span><i style="background:#F7C1C1;color:#791F1F">×</i>收針</span><span><i style="background:#FAC775;color:#633806">+</i>起針</span>':''}${rows.some(r=>r.cells.some(c=>c[0]==='F'||c[0]==='B'))?'<span><i style="background:#B5D4F4;color:#0C447C">F</i>外鉤長針</span><span><i style="background:#E6F1FB;color:#185FA5">B</i>內鉤長針</span>':''}${cur!=null?'<span><i style="background:transparent;border:2px solid var(--rose)"></i>現在這圈</span>':''}</div><div class="gridwrap"><svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(pat.name)}格子圖">${s}</svg></div><p class="hint">${foot}</p>`;
+}
+const SHORT={'短針':'短','減針':'減','加針':'加','鎖針':'鎖','下針':'下','上針':'上','收針':'收','起針':'起','外鉤長針':'外','內鉤長針':'內','長針':'長','中長針':'中','引拔':'引'};
+function rowStrip(pat,p,big){
+  const cur=patternRounds(pat).find(r=>r.n===p.round);const q=cur&&parseSteps(cur.text);if(!q)return '';
+  const cells=[];for(const a of q.actions){const st=q.steps[a.si];const c=CELL[st.k]||CELL['短針'];cells.push([SHORT[st.k]||c[0],c[1],c[2],c[3]])}
+  let ids=cells.map((c,i)=>i);if(pat.flat&&p.round%2===(pat.rev==='odd'?1:0)){cells.reverse();ids.reverse()}
+  const W=big?48:30,H=big?60:36,FS=big?22:14,k=Math.min(p.stitch||0,cells.length);let x=4,s='';
+  cells.forEach((c,ci)=>{const cw=c[3]*W,id=ids[ci],done=id<k,now=id===k;
+    s+=`<rect x="${x+1}" y="4" width="${cw-2}" height="${H}" rx="5" fill="${done?'#1D9E75':c[1]}" fill-opacity="${done?0.55:1}" stroke="var(--line)" stroke-width="1"/><text x="${x+cw/2}" y="${4+H/2+1}" text-anchor="middle" dominant-baseline="central" font-size="${FS}" font-weight="${now?700:400}" fill="${done?'#fff':c[2]}">${c[0]}</text>`;
+    if(now)s+=`<rect class="cur-cell" x="${x-1}" y="1" width="${cw+2}" height="${H+6}" fill="none" stroke="#D85A30" stroke-width="3.5" rx="7"/>`;
+    if((id+1)%10===0)s+=`<text x="${x+cw/2}" y="${H+20}" text-anchor="middle" font-size="11" fill="var(--muted)">${id+1}</text>`;
+    x+=cw});
+  const w=x+4,h=H+26;
+  return `<div class="nowstrip"><div class="row"><span class="lbl">第 ${p.round} 圈的位置</span><span class="hint">綠＝做好了　橘框＝現在這針</span></div><div class="gridwrap"><svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="第${p.round}圈目前位置">${s}</svg></div></div>`;
+}
+function diagramBox(pat,open,cur,k,noGrid){if(!pat)return '';const d=DIAGRAMS[pat.id]||'';const g=noGrid?'':gridChart(pat,cur,k);if(!d&&!g)return '';return `<details class="card diag" ${open?'open':''}><summary>📐 看草圖</summary><div class="diag-body">${d}${g}</div></details>`}
 const BAG_STRAP=`1: 短針18（共18針）
 2: 減1、短針14、減1（共16針）
 3: 減1、短針12、減1（共14針）
@@ -329,6 +420,8 @@ function render(){
   else if(view.tab==='yarns')m.innerHTML=yarnList();
   else m.innerHTML=swatchList();
   view._scroll=false;
+  m.querySelectorAll('.gridwrap').forEach(w=>{const c=w.querySelector('.cur-cell');if(c){const x=+c.getAttribute('x');w.scrollLeft=Math.max(0,x-w.clientWidth/2)}});
+  const dd=m.querySelector('.diag');if(dd&&view.tab==='projects')dd.addEventListener('toggle',()=>{view.diagOpen=dd.open;dd.open&&dd.querySelectorAll('.gridwrap').forEach(w=>{const c=w.querySelector('.cur-cell');if(c)w.scrollLeft=Math.max(0,+c.getAttribute('x')-w.clientWidth/2)})});
   if(view.tab==='swatches')runCalc();
 }
 
@@ -377,6 +470,8 @@ function projectDetail(p){
       <button class="edit" data-act="stitch-reset">歸零</button></div>`}
   </div>
   ${seq?stepStrip(p,seq):''}
+  ${pat?rowStrip(pat,p):''}
+  ${diagramBox(pat,view.diagOpen,p.round,p.stitch||0,true)}
   ${cur?`<div class="card now" style="margin-top:14px"><span class="lbl">第 ${cur.n} 圈要做的事</span><p>${esc(cur.text)}</p>${cur.count?`<span class="target">鉤完這圈應該有 <b>${cur.count}</b> 針</span>`:''}</div>`:''}
   ${p.notes?`<div class="sec"><h2>筆記</h2><div class="card" style="padding:14px 16px;white-space:pre-wrap">${esc(p.notes)}</div></div>`:''}
   ${photoSection('project',p)}
@@ -386,30 +481,26 @@ function projectDetail(p){
 }
 
 function stepBox(p,seq,cur){
+  const V=/下針|上針/.test(cur&&cur.text||'')?'織':'鉤';
   const n=seq.actions.length, done=Math.min(p.stitch||0,n);
   const out=k=>seq.actions.slice(0,k).reduce((t,x)=>t+x.w,0);
   if(done>=n)return `<div class="card cbox stepbox"><span class="lbl">這圈完成</span><div class="num ok">✓</div>
-    <span class="target">共鉤了 <b>${out(n)}</b> 針${cur.count?`，應有 ${cur.count} 針`:''}</span>
+    <span class="target">共${V}了 <b>${out(n)}</b> 針${cur.count?`，應有 ${cur.count} 針`:''}</span>
     <div class="pm"><button data-act="stitch" data-d="-1" aria-label="退一步">−</button><button class="plus" data-act="round" data-d="1">＋ 下一圈</button></div></div>`;
   const a=seq.actions[done], s=seq.steps[a.si], nx=seq.actions[done+s.n-a.i];
   const nextStep=nx?seq.steps[nx.si]:null;
-  return `<div class="card cbox stepbox"><span class="lbl">${seq.rep>1?`第 ${a.r+1} / ${seq.rep} 次 · `:''}現在要鉤</span>
+  return `<div class="card cbox stepbox"><span class="lbl">${seq.rep>1?`第 ${a.r+1} / ${seq.rep} 次 · `:''}現在要${V}</span>
     <div class="kind ${s.k==='減針'?'dec':''}">${s.k}${s.k==='減針'?'<small>2 併 1</small>':s.k==='加針'?'<small>同一針鉤 2 針</small>':s.k==='鎖針'?'<small>不算進這圈針數</small>':''}</div>
     <div class="num">${a.i+1}<small> / ${s.n}</small></div>
-    <span class="target">${nextStep?`接下來：${nextStep.k} ${nextStep.n}`:'這是這圈最後一段'} · 已鉤 ${out(done)} / ${out(n)} 針</span>
-    <div class="pm"><button data-act="stitch" data-d="-1" aria-label="退一針">−</button><button class="plus" data-act="stitch" data-d="1" aria-label="鉤好一針">＋1 鉤好了</button></div>
+    <span class="target">${nextStep?`接下來：${nextStep.k} ${nextStep.n}`:'這是這圈最後一段'} · 已${V} ${out(done)} / ${out(n)} 針</span>
+    <div class="pm"><button data-act="stitch" data-d="-1" aria-label="退一針">−</button><button class="plus" data-act="stitch" data-d="1" aria-label="${V}好一針">＋1 ${V}好了</button></div>
     <button class="edit" data-act="stitch-reset">這圈重來</button></div>`;
 }
 function stepStrip(p,seq){
-  const n=seq.actions.length, done=Math.min(p.stitch||0,n), a=seq.actions[Math.min(done,n-1)];
-  const curR=done>=n?seq.rep:a.r;
-  let html='';
-  for(let r=0;r<seq.rep;r++){
-    html+=`<div class="srow">${seq.rep>1?`<span class="rlab">${r===0?'前半':'後半'}</span>`:''}${seq.steps.map((s,si)=>{
-      const st=r<curR||(r===curR&&si<a.si)||done>=n?'past':(r===curR&&si===a.si?'on':'');
-      return `<span class="seg ${st} ${s.k==='減針'?'dec':''}">${s.k} ${s.n}</span>`}).join('<span class="arr">›</span>')}</div>`;
-  }
-  return `<div class="card strip">${html}</div>`;
+  const n=seq.actions.length, done=Math.min(p.stitch||0,n), a=seq.actions[Math.min(done,n-1)], fin=done>=n;
+  const segs=seq.steps.map((st,si)=>{const cls=fin?'past':si<a.si?'past':si===a.si?'on':'';return `<span class="seg ${cls} ${st.k==='減針'?'dec':''}">${st.k} ${st.n}</span>`}).join('<span class="arr">›</span>');
+  const rep=seq.rep>1?`<div class="reprow"><span class="repbadge">第 ${fin?seq.rep:a.r+1} / ${seq.rep} 次</span><span class="repbar"><i style="width:${Math.round((fin?seq.rep:a.r)/seq.rep*100)}%"></i></span></div>`:'';
+  return `<div class="card strip">${rep}<div class="srow">${segs}</div>${seq.rep>1?'<span class="hint">這一段重複做，做完一次會自動從頭再來</span>':''}</div>`;
 }
 function patternList(){
   return `<div class="head"><div><h1>圖解</h1><p class="sub">一行一圈，作品會照圈數顯示要做的事</p></div><div class="row">${sample&&canImages?'<button class="btn" data-act="ai-pattern">從照片做圖解</button>':''}<button class="btn ghost" data-act="new-pattern">＋ 手寫圖解</button></div></div>
@@ -440,6 +531,7 @@ function patternDetail(p){
   <div class="row"><button class="btn ghost" data-act="edit-pattern" data-id="${p.id}">編輯</button><button class="btn" data-act="start-from" data-id="${p.id}">用這份開始鉤</button></div></div>
   ${tabs}
   ${p.notes?`<div class="card now" style="border-left-color:var(--green)"><span class="lbl" style="color:var(--green)">重點</span><p>${esc(p.notes)}</p></div>`:''}
+  ${diagramBox(p,true)}
   ${photoSection('pattern',p)}
   <div class="sec"><div class="card rounds">${rs.map(r=>`<div class="rd"><span class="n">第${r.n}圈</span><span class="t">${esc(r.text)}</span><span class="c">${r.count??''}</span></div>`).join('')||'<div class="empty">沒有讀到圈數，請在每行開頭寫圈數，例如「5: 說明（共78針）」</div>'}</div></div>`;
 }
@@ -791,7 +883,7 @@ async function wake(on){
 }
 document.addEventListener('visibilitychange',()=>{if(view.focus&&document.visibilityState==='visible')wake(true)});
 function focusView(p){
-  const {cur,seq}=stepsFor(p);const pat=byId(S.patterns,p.patternId);
+  const {cur,seq}=stepsFor(p);const V=/下針|上針/.test(cur&&cur.text||'')?'織':'鉤';const pat=byId(S.patterns,p.patternId);
   let main,sub='',done=false;
   if(seq){
     const n=seq.actions.length,k=Math.min(p.stitch||0,n);
@@ -799,13 +891,14 @@ function focusView(p){
     if(k>=n){done=true;main=`<div class="fz-kind ok">✓ 這圈完成</div><div class="fz-num">${out(n)}<small> 針</small></div>`;sub='按下方「＋ 下一圈」繼續';}
     else{const a=seq.actions[k],s=seq.steps[a.si],nx=seq.actions[k+s.n-a.i],ns=nx?seq.steps[nx.si]:null;
       main=`<div class="fz-kind ${s.k==='減針'?'dec':''}">${s.k}${s.k==='減針'?'<small>2 併 1</small>':s.k==='加針'?'<small>同一針 2 針</small>':''}</div><div class="fz-num">${a.i+1}<small> / ${s.n}</small></div>`;
-      sub=`${seq.rep>1?`第 ${a.r+1}/${seq.rep} 次 · `:''}${ns?`接下來 ${ns.k} ${ns.n}`:'最後一段'} · 已鉤 ${out(k)}/${out(n)}`;}
+      sub=`${seq.rep>1?`第 ${a.r+1}/${seq.rep} 次 · `:''}${ns?`接下來 ${ns.k} ${ns.n}`:'最後一段'} · 已${V} ${out(k)}/${out(n)}`;}
   }else{main=`<div class="fz-kind">針數</div><div class="fz-num">${p.stitch||0}${cur&&cur.count?`<small> / ${cur.count}</small>`:''}</div>`}
   return `<div class="focus">
     <div class="fz-top"><div><b>第 ${p.round} 圈</b><span>${esc(pat?partName(pat):p.name)}</span></div><div class="row">${VOICE_OK?`<button class="btn ${voice.on?'':'ghost'} micbtn" data-act="voice" aria-pressed="${voice.on}">${voice.on?'<i class="dot"></i> 聲控中':'🎤 聲控'}</button>`:''}<button class="btn ghost" data-act="focus-off">離開</button></div></div>
     ${VOICE_OK?`<div class="vmodes"><button class="chip" data-act="vmode" data-m="words" aria-pressed="${voiceMode()==='words'}">說「一」</button><button class="chip" data-act="vmode" data-m="count" aria-pressed="${voiceMode()==='count'}">數數</button><button class="chip" data-act="vmode" data-m="sound" aria-pressed="${voiceMode()==='sound'}">快速：有聲音就 +1</button>${voiceMode()==='sound'?`<button class="chip" data-act="vsens">靈敏度：${['低','中','高'][(view.vsens||2)-1]}</button>`:''}</div>`:''}
     ${voice.on?`<div class="heard">${voiceMode()==='sound'?'說「一」、出聲或輕敲桌面都會 +1，反應最快；周圍安靜時最準':voiceMode()==='count'?'邊鉤邊數「一、二、三…」，數到幾就是這段第幾針；每段重新從一數起':'說「一」＝ 加一針　說「退」＝ 退一針'}${voice.heard?`　·　剛剛：${esc(voice.heard)}`:''}</div>`:''}${voice.on&&(voiceMode()==='sound'||voice.snd)?`<div class="meter" aria-hidden="true"><i id="lvl"></i><b id="thr"></b></div><div class="heard" style="color:var(--muted)">${voiceMode()==='sound'?'出聲時綠條要超過紅線才會 +1，超不過就把靈敏度調高':'綠條會跟著你的聲音跳，代表手機有聽到'}</div>`:''}${voice.err?`<div class="heard err">${esc(voice.err)}</div>`:''}
-    <button class="fz-tap ${done?'is-done':''}" data-act="stitch" data-d="1" aria-label="鉤好一針">${main}<span class="fz-sub">${sub}</span>${done?'':'<span class="fz-hint">點這裡任何地方 ＝ 鉤好一針</span>'}</button>
+    <button class="fz-tap ${done?'is-done':''}" data-act="stitch" data-d="1" aria-label="${V}好一針">${main}<span class="fz-sub">${sub}</span>${done?'':`<span class="fz-hint">點這裡任何地方 ＝ ${V}好一針</span>`}</button>
+    ${pat?rowStrip(pat,p,true):''}
     <div class="fz-bot"><button class="btn ghost" data-act="stitch" data-d="-1">− 退一針</button><button class="btn" data-act="round" data-d="1">＋ 下一圈</button></div>
   </div>`;
 }
